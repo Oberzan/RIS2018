@@ -24,26 +24,26 @@ class Generator:
                 c_goal = p
                 max_dist = dist
 
-        self.goals.remove(p)
+        self.goals.remove(c_goal)
         self.drawImg()
 
         print("Publishsing point:\n" + str(p) +
-              "\n at distance: " + str(dist) + "\n")
-        print("Remaining points: " + str(len(self.goals)))
+              "\n at distance: " + str(dist))
+        print("Remaining points: " + str(len(self.goals)) + "\n")
 
         self.pub.publish(c_goal)
 
         # rospy.sleep(5)
 
     def drawImg(self):
-        pimg = self.img
+        pimg = self.img.copy()
         step = rospy.get_param('~step')
         for p in self.goals:
             cv2.circle(pimg, (p.x, p.y), 2, (0, 255, 0), -1)
 
-        print("Image drawn")
+        print("Drawing image")
         cv2.imshow('image', pimg)
-        cv2.waitKey(1)
+        print("Finished drawing")
 
     def __init__(self):
         rospy.init_node('generate_path')

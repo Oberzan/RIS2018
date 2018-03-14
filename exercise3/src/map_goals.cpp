@@ -8,12 +8,18 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include <actionlib/client/simple_action_client.h>
+#include <move_base_msgs/MoveBaseAction.h>
+
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+
 using namespace std;
 using namespace cv;
 
 Mat cv_map;
 float map_resolution = 0;
 tf::Transform map_transform;
+
 
 ros::Publisher goal_pub;
 ros::Subscriber map_sub;
@@ -110,7 +116,7 @@ void goalCallback(const geometry_msgs::Point &point)
 
     int v = (int)cv_map.at<unsigned char>(point.y, point.x);
 
-    ROS_INFO("Moving to (x: %d, y: %d)", (int)point.x, (int)point.y);
+    ROS_INFO("gC -> Moving to (x: %d, y: %d)", (int)point.x, (int)point.y);
 
     if (v != 255)
     {
@@ -120,20 +126,37 @@ void goalCallback(const geometry_msgs::Point &point)
     tf::Point pt((float)point.x * map_resolution, (float)point.y * map_resolution, 0.0);
     tf::Point transformed = map_transform * pt;
 
+
+
+    /*** Sending MoveBaseGoal with ActionClient to /move_base/goal ***/
+    // TODO: reuse an instance of MoveBaseClient
+    MoveBaseClient ac("move_base", true);
+    while(!ac.waitForServer(ros::Duration(5.0))){
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }
     geometry_msgs::PoseStamped goal;
     goal.header.frame_id = "map";
     goal.pose.orientation.w = 1;
     goal.pose.position.x = transformed.x();
     goal.pose.position.y = -transformed.y();
     goal.header.stamp = ros::Time::now();
-    goal_pub.publish(goal);
 
+    move_base_msgs::MoveBaseGoal goal1;
+    goal1.target_pose = goal;
+
+    ac.sendGoal(goal1);
+    ac.waitForResult(ros::Duration(60));
+    ROS_INFO("Action result: %s", ac.getState().toString().c_str());
+
+    /*** Sending Point to /move_base_simple/goal ***/
+    // goal_pub.publish(goal);
+    
+    ROS_INFO("Request a goal. Current point: %d,%d\n", (int)point.x, (int)point.y);
     goal_request_pub.publish(point);
 }
 
 int main(int argc, char **argv)
 {
-
     ros::init(argc, argv, "map_goals");
     ros::NodeHandle n;
 
@@ -144,13 +167,14 @@ int main(int argc, char **argv)
     goal_request_pub = n.advertise<geometry_msgs::Point>("goal/request", 10);
 
     ros::Rate loop_rate(1);
-
+    loop_rate.sleep();
+    
     geometry_msgs::Point p;
     p.x = 5.0;
     p.y = 2.0;
     p.z = 0.0;
-    goal_request_pub.publish(p);
     ROS_INFO("Publishing to (x: %d, y: %d)", (int)p.x, (int)p.y);
+    goal_request_pub.publish(p);   
 
     while (ros::ok())
     {
