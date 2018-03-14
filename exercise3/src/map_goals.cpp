@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
     p.z = 0.0;
     goal_request_pub.publish(p);
 
-    ROS_INFO("Moving to (x: %d, y: %d)", (int) point.x, (int) point.y);
+    ROS_INFO("Moving to (x: %d, y: %d)", (int) p.x, (int) p.y);
 
 
     while(ros::ok()) {
