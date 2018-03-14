@@ -148,15 +148,19 @@ int main(int argc, char** argv) {
 
 
 
+    bool sent = false;
+
 
     while(ros::ok()) {
-        geometry_msgs::Point p;
-        p.x = 5.0;
-        p.y = 2.0;
-        p.z = 0.0;
-        goal_request_pub.publish(p);
-        ROS_INFO("Publishing to (x: %d, y: %d)", (int) p.x, (int) p.y);
-
+        if(!sent) {
+            geometry_msgs::Point p;
+            p.x = 5.0;
+            p.y = 2.0;
+            p.z = 0.0;
+            goal_request_pub.publish(p);
+            ROS_INFO("Publishing to (x: %d, y: %d)", (int) p.x, (int) p.y);
+            sent = true;
+        }
         ros::spinOnce();
         loop_rate.sleep();
     }
