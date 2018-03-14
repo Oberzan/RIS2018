@@ -152,6 +152,9 @@ int main(int argc, char** argv) {
 
 
     while(ros::ok()) {
+        ros::spinOnce();
+        loop_rate.sleep();
+
         if(!sent) {
             geometry_msgs::Point p;
             p.x = 5.0;
@@ -161,9 +164,6 @@ int main(int argc, char** argv) {
             ROS_INFO("Publishing to (x: %d, y: %d)", (int) p.x, (int) p.y);
             sent = true;
         }
-        ros::spinOnce();
-        loop_rate.sleep();
     }
     return 0;
-
 }
