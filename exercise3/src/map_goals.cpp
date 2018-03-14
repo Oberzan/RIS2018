@@ -143,23 +143,20 @@ int main(int argc, char** argv) {
 	goal_pub = n.advertise<geometry_msgs::PoseStamped>("goal", 10);
     goal_request_pub = n.advertise<geometry_msgs::Point>("goal/request", 10);
 
-    
-
-
-
-
     ros::Rate loop_rate(1);
 
-    geometry_msgs::Point p;
-    p.x = 5.0;
-    p.y = 2.0;
-    p.z = 0.0;
-    goal_request_pub.publish(p);
 
-    ROS_INFO("Moving to (x: %d, y: %d)", (int) p.x, (int) p.y);
+
 
 
     while(ros::ok()) {
+        geometry_msgs::Point p;
+        p.x = 5.0;
+        p.y = 2.0;
+        p.z = 0.0;
+        goal_request_pub.publish(p);
+        ROS_INFO("Publishing to (x: %d, y: %d)", (int) p.x, (int) p.y);
+
         ros::spinOnce();
         loop_rate.sleep();
     }
