@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	geometry_msgs
 	tf
+	rospy
 )
 
 find_package( OpenCV REQUIRED )
@@ -19,3 +20,4 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 add_executable(map_goals src/map_goals.cpp)
 target_link_libraries(map_goals ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+catkin_install_python(PROGRAMS scripts/generate_path DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

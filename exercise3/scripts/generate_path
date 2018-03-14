@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+import roslib; roslib.load_manifest('exercise3')
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import Point
+
+import numpy as np
+import cv2
+import yaml
+import time
+
+class Generator:
+
+  def pointCallback(self, data):
+
+    max_dist = 999999999
+  
+    for p in self.goals:
+      dist = ((data.x - p.x) ** 2 + (data.y - p.y) ** 2) ** 0.5
+      if dist < max_dist:
+        c_goal = p
+        max_dist = dist
+        
+    self.goals.remove(p)
+    self.drawImg()
+
+    print("Publishsing point:\n" + str(p) + "\n at distance: " + str(dist) + "\n")
+    print("Remaining points: " + str(len(self.goals)))
+
+    self.pub.publish(c_goal)
+
+    # rospy.sleep(5)
+
+  def drawImg(self):
+    pimg = self.img
+    step = rospy.get_param('~step')
+    for p in self.goals:
+      cv2.circle(pimg, (p.x, p.y), 2, (0, 255, 0), -1)
+
+    print("Image drawn")
+    cv2.imshow('image', pimg)
+    cv2.waitKey(1)
+
+  def __init__(self):
+    rospy.init_node('generate_path')
+    # Load an color image in grayscale
+
+    self.goals = set()
+
+    rospy.Subscriber("/goal/request", Point, self.pointCallback)
+    self.pub = rospy.Publisher('/goal/response', Point, queue_size=10)
+
+
+    with open(rospy.get_param('~img_yaml'), 'r') as stream:
+      try:
+          stream = yaml.load(stream)
+          start_x = stream["origin"][0]
+          start_y = stream["origin"][1]
+      except yaml.YAMLError as exc:
+          print(exc)
+    print(stream)
+ 
+
+    self.img = cv2.imread(rospy.get_param('~img'), 0)
+    self.height, self.width = self.img.shape
+
+    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    cv2.namedWindow( "Erosion Demo", cv2.WINDOW_NORMAL )
+
+    e = rospy.get_param('~erosion')
+    kernel = np.ones((e,e),np.uint8)
+    self.erosion = cv2.erode(self.img,kernel,iterations = 1)
+
+    
+
+    step = rospy.get_param('~step')
+    for y in range(step, self.height, step):
+      for x in range(step, self.width, step):        
+        if self.erosion[y][x] > 250:
+          self.goals.add(Point(x, y, 0))
+    
+    print(self.goals)
+    self.drawImg()
+
+    cv2.imshow( "Erosion Demo", self.erosion )
+
+    while True:
+      k = cv2.waitKey(0)
+      if k == 27:
+        cv2.destroyAllWindows()
+        break
+  
+if __name__ == '__main__':
+    g = Generator()

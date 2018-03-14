@@ -1,0 +1,10 @@
+<launch>
+
+  <node pkg="exercise3" type="generate_path" name="generate_path" output="screen">
+    <param name="img" value="/home/simon/FRI/RIS/ex3_fixed.pgm"/>
+    <param name="img_yaml" value="/home/simon/FRI/RIS/ex3.yaml"/>
+    <param name="step" value="12"/>
+    <param name="erosion" value="7"/>
+  </node>
+
+</launch>
