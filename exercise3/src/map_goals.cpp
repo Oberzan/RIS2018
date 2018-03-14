@@ -105,7 +105,7 @@ void goalCallback(const geometry_msgs::Point& point) {
 
     int v = (int)cv_map.at<unsigned char>(point.y, point.x);
 
-    ROS_INFO("Recieved & Moving to (x: %d, y: %d)", (int) point.x, (int) point.y);
+    ROS_INFO("Moving to (x: %d, y: %d)", (int) point.x, (int) point.y);
 
     if (v != 255) {
         return;
@@ -122,6 +122,8 @@ void goalCallback(const geometry_msgs::Point& point) {
     goal.pose.position.y = -transformed.y();
     goal.header.stamp = ros::Time::now();
     goal_pub.publish(goal);
+
+
     goal_request_pub.publish(point);
 }
 
@@ -141,19 +143,24 @@ int main(int argc, char** argv) {
 	goal_pub = n.advertise<geometry_msgs::PoseStamped>("goal", 10);
     goal_request_pub = n.advertise<geometry_msgs::Point>("goal/request", 10);
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(1);
 
 
 
-    loop_rate.sleep(); // For publish to work we need to sleep
-    geometry_msgs::Point p;
-    p.x = 5.0;
-    p.y = 2.0;
-    p.z = 0.0;
-    goal_request_pub.publish(p);
-    ROS_INFO("Publishing initial point (x: %d, y: %d)", (int) p.x, (int) p.y);
+
+
+    bool sent = false;
 
     while(ros::ok()) {
+        if (!sent) {
+            geometry_msgs::Point p;
+            p.x = 5.0;
+            p.y = 2.0;
+            p.z = 0.0;
+            goal_request_pub.publish(p);
+            ROS_INFO("Publishing to (x: %d, y: %d)", (int) p.x, (int) p.y);
+            sent = true;
+        }
         ros::spinOnce();
         loop_rate.sleep();
     }
