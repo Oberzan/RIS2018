@@ -17,6 +17,8 @@ tf::Transform map_transform;
 
 ros::Publisher goal_pub;
 ros::Subscriber map_sub;
+ros::Publisher goal_request_pub;
+ros::Subscriber goal_response_sub;
 
 void mapCallback(const nav_msgs::OccupancyGridConstPtr& msg_map) {
     int size_x = msg_map->info.width;
@@ -99,18 +101,18 @@ void mouseCallback(int event, int x, int y, int, void* data) {
 
 
 
-void pointCallback(int x, int y) {
+void goalCallback(const geometry_msgs::Point& point) {
 
-    int v = (int)cv_map.at<unsigned char>(y, x);
+    int v = (int)cv_map.at<unsigned char>(point.y, point.x);
+
+    ROS_INFO("Moving to (x: %d, y: %d)", (int) point.x, (int) point.y);
 
     if (v != 255) {
-        ROS_WARN("Unable to move to (x: %d, y: %d), not reachable", x, y);
         return;
     }
 
-    ROS_INFO("Moving to (x: %d, y: %d)", x, y);
 
-    tf::Point pt((float)x * map_resolution, (float)y * map_resolution, 0.0);
+    tf::Point pt((float) point.x * map_resolution, (float) point.y * map_resolution, 0.0);
     tf::Point transformed = map_transform * pt;
 
     geometry_msgs::PoseStamped goal;
@@ -120,6 +122,9 @@ void pointCallback(int x, int y) {
     goal.pose.position.y = -transformed.y();
     goal.header.stamp = ros::Time::now();
     goal_pub.publish(goal);
+
+
+    goal_request_pub.publish(point);
 }
 
 
@@ -132,30 +137,27 @@ int main(int argc, char** argv) {
     ros::NodeHandle n;
 
     map_sub = n.subscribe("map", 10, &mapCallback);
+    goal_response_sub = n.subscribe("goal/response", 10, &goalCallback);
+
+
 	goal_pub = n.advertise<geometry_msgs::PoseStamped>("goal", 10);
+    goal_request_pub = n.advertise<geometry_msgs::Point>("goal/request", 10);
 
-
-    ros::Publisher goal_request_pub = n.advertise<geometry_msgs::Point>("goal/request", 10);
-
-
+    
 
 
 
 
     ros::Rate loop_rate(1);
 
+    geometry_msgs::Point p;
+    p.x = 5.0;
+    p.y = 2.0;
+    p.z = 0.0;
+    goal_request_pub.publish(p);
+
+
     while(ros::ok()) {
-        geometry_msgs::Point p;
-        p.x = 5.0;
-        p.y = 2.0;
-        p.z = 0.0;
-
-        ROS_INFO("Publishing to (x: %d, y: %d)", p.x, p.y);
-
-        goal_request_pub.publish(p);
-
-
-
         ros::spinOnce();
         loop_rate.sleep();
     }
