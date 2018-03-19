@@ -33,7 +33,10 @@ class Breadcrumbs():
 				marker = Marker()
 				marker.header.stamp = rospy.Time.now()
 				marker.header.frame_id = '/map'
-				marker.pose.position = Point(point.transform.translation.x, point.transform.translation.y, point.transform.translation.z)
+				marker.pose.position = Point(
+					point.transform.translation.x,
+				 	point.transform.translation.y,
+				  point.transform.translation.z)
 				marker.type = Marker.CUBE
 				marker.action = Marker.ADD
 				marker.frame_locked = False
