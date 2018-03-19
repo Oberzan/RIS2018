@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+# roslib.load_manifest('exercise3')
+import sys
+import rospy
+import cv2
+from nav_msgs.msg import OccupancyGrid
+import tf2_ros
+import numpy as np
+from geometry_msgs.msg import Point, PoseStamped
+from move_base_msgs.msg import MoveBaseGoal
+
+
+class MapGoals:
+
+    def map_callback(self, data):
+        size_x = data.info.width
+        size_y = data.info.height
+
+
+        if size_x < 3 or size_y < 3:
+            print(f'Map size is only x: {size_x},  y: {size_y} . Not running map to image conversion')
+
+
+        rows, columns  = self.cv_map.shape
+
+
+        if rows != size_y and columns != size_x:
+            self.cv_map = np.array([size_y, size_x])
+
+        self.map_resolution = data.info.resolution
+
+
+        print(data.info.origin)
+
+        # Get the point in the "map" coordinate system
+        self.map_transform = self.tf2_buffer.transform(data.info.origin, "map")
+
+
+        print(data)
+
+
+        for i in range(size_x):
+            for j in range(size_y):
+                if data[i][j] == -1:
+                    self.cv_map[i][j] = 127
+                elif data[i][j] == 100:
+                    self.cv_map[i][j] = 0
+                elif data[i][j] == 0:
+                    self.cv_map[i][j] = 255
+                else:
+                    print(f'Error at i: {i} j {j}')
+
+        print(self.cv_map)
+
+
+
+    def goal_callback(self, point):
+
+        pt = Point(point.x * self.map_resolution, point.y * self.map_resolution)
+        transformed = self.map_transform * pt
+
+
+        goal = PoseStamped()
+
+        goal.header.frame_id = "map"
+        goal.pose.orientation.w = 1
+        goal.pose.position.x = transformed.x()
+        goal.pose.position.y = -transformed.y()
+        goal.header.stamp = rospy.get_time().secs
+
+
+        self.goal_pub.publish(goal)
+
+        self.goal_request_pub.publish(point);
+
+
+
+    def __init__(self):
+        self.cv_map = np.empty([0,0])
+        self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.map_callback)
+        self.tf2_buffer = tf2_ros.Buffer()
+        self.tf2_listener = tf2_ros.TransformListener(self.tf2_buffer)
+        self.map_resolution = 0
+        self.goal_pub = rospy.Publisher("goal", 10)
+        self.goal_request_pub = rospy.Publisher("goal/request", 10)
+        self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
+
+def main(args):
+
+    map_goals = MapGoals()
+
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print("Shutting down")
+
+
+if __name__ == '__main__':
+    main(sys.argv)
