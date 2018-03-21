@@ -12,9 +12,10 @@ import tf2_ros
 import numpy as np
 import time
 from geometry_msgs.msg import Point
-from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped, PointStamped, do_transform_pose
-from move_base_msgs.msg import MoveBaseGoal
-#import yaml
+from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped, PointStamped
+from actionlib import SimpleActionClient
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+
 
 class MapGoals:
 
@@ -88,55 +89,45 @@ class MapGoals:
         print("\ngoal_callback")
         print(point)
 
-        # pt = PointStamped()
-        # pt.point.x = point.x * self.map_resolution
-        # pt.point.y = point.y * self.map_resolution
-        # pt.point.z = 0.0
-        # pt.header.frame_id = "map"
-        # pt.header.stamp = rospy.Time(0)
-        # print(pt)
-        # pointRobot = self.tf2_buffer.transform(pt, "base_link")
-        # print(type(pointRobot))
-        
-        # print(self.map_resolution)
-        # print(pointRobot)
-        
-        # print(self.map_resolution)
-        # print(self.map_transform)
+
         p = Point(point.x * self.map_resolution + self.map_transform.position.x, \
                  (self.size_y - point.y) * self.map_resolution + self.map_transform.position.y, \
                  0)
-        # p = Point(point.x * self.map_resolution, (self.size_y - point.y) * self.map_resolution, 0)
-        # transformed = do_transform_pose(p, self.map_transform) #self.map_transform * pt
         print("Transformed:")
         print(p)
 
-        #transformed = self.map_transform * pt
 
 
         goal = PoseStamped()
-
         goal.header.frame_id = "map"
         goal.pose.orientation.w = 1
         goal.pose.position = p
-        #goal.pose.position.y = -transformed.y()
         goal.header.stamp = rospy.Time(0)
         print("\nPoseStamped:")
         print(goal)
 
-        self.goal_pub.publish(goal)
 
+
+        move_base_goal = MoveBaseGoal()
+        move_base_goal.target_pose = goal
+
+        self.action_client.send_goal(move_base_goal)
+        self.action_client.wait_for_result(60)
+
+        print("Action result: " + self.action_client.get_state())
         self.goal_request_pub.publish(point)
 
 
     def __init__(self):
         rospy.init_node('map_goals')
 
+        self.action_client = SimpleActionClient("move_base", MoveBaseAction)
+        self.action_client.wait_for_server()
+
         self.cv_map = None
         self.map_transform = None
         self.tf2_buffer = tf2_ros.Buffer()
         self.tf2_listener = tf2_ros.TransformListener(self.tf2_buffer)
-        #self.tf2_listener  #.waitForTransform("map", "base_link", rospy.Time(0))
         self.map_resolution = 0
         self.goal_pub = rospy.Publisher("goal", PoseStamped, queue_size=10)
         self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
@@ -146,7 +137,7 @@ class MapGoals:
 
 def main(args):
 
-    map_goals = MapGoals()
+    _ = MapGoals()
     rate = rospy.Rate(10)
     try:
         rospy.spin()
