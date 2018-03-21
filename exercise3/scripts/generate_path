@@ -42,7 +42,7 @@ class Generator:
             cv2.circle(pimg, (p.x, p.y), 2, (0, 255, 0), -1)
 
         # print("Drawing image")
-        # cv2.imshow('image', pimg)
+        cv2.imshow('image', pimg)
         # print("Finished drawing")
 
     def __init__(self):
@@ -85,7 +85,7 @@ class Generator:
         self.drawImg()
 
         cv2.imshow("Erosion Demo", self.erosion)
-
+        
         while True:
             k = cv2.waitKey(0)
             if k == 27:

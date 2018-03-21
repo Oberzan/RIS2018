@@ -16,11 +16,13 @@ from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from constants import ACTION_CLIENT_STATUSES
+from moves import rotate
 
 
 class MapGoals:
 
     def map_callback(self, data):
+        print("Map callbasck")
         size_x = data.info.width
         size_y = data.info.height
         self.cv_map = np.zeros(shape=(size_y, size_x))
@@ -70,50 +72,17 @@ class MapGoals:
         move_base_goal.target_pose = goal
         return move_base_goal
 
-    def rotate(self, speed, angle, clockwise=True):
-        vel_msg = Twist()
-
-        # Converting from angles to radians
-        angular_speed = speed * 2 * math.pi / 360
-        relative_angle = angle * 2 * math.pi / 360
-
-        # We wont use linear components
-        vel_msg.linear.x = 0
-        vel_msg.linear.y = 0
-        vel_msg.linear.z = 0
-        vel_msg.angular.x = 0
-        vel_msg.angular.y = 0
-
-        if clockwise:
-            vel_msg.angular.z = -abs(angular_speed)
-        else:
-            vel_msg.angular.z = abs(angular_speed)
-
-        # Setting the current time for distance calculus
-        t0 = rospy.Time.now().to_sec()
-        current_angle = 0
-
-        while (current_angle < relative_angle):
-            self.velocity_publisher.publish(vel_msg)
-            t1 = rospy.Time.now().to_sec()
-            current_angle = angular_speed * (t1 - t0)
-
-        vel_msg.angular.z = 0
-        self.velocity_publisher.publish(vel_msg)
-        rospy.spin()
-
-
-
     def goal_callback(self, point):
         transformed =self.transform_point(point)
         print("Transofrming point {} -> {}".format(point, transformed))
 
-        # move_base_goal = self.point_2_base_goal(transformed)
-        # self.action_client.send_goal(move_base_goal)
-        # self.action_client.wait_for_result(rospy.Duration(60))
-        # print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
+        move_base_goal = self.point_2_base_goal(transformed)
+        self.action_client.send_goal(move_base_goal)
+        self.action_client.wait_for_result(rospy.Duration(60))
+        print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-        rotate(self.velocity_publisher, 15, 360)
+        rotate(self.velocity_publisher, 30, 390)
+        
         self.goal_request_pub.publish(point)
 
     def __init__(self):
@@ -131,7 +100,7 @@ class MapGoals:
         self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
         self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.map_callback)
-        self.velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        self.velocity_publisher = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
 
 
 def main(args):
