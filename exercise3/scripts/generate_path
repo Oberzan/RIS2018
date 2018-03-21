@@ -65,6 +65,7 @@ class Generator:
         print(stream)
 
         self.img = cv2.imread(rospy.get_param('~img'), 0)
+        print(self.img)
         self.height, self.width = self.img.shape
 
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
