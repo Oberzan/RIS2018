@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import roslib
+
 roslib.load_manifest('exercise3')
 import rospy
 from std_msgs.msg import String
@@ -85,7 +86,7 @@ class Generator:
         self.drawImg()
 
         cv2.imshow("Erosion Demo", self.erosion)
-        
+
         while True:
             k = cv2.waitKey(0)
             if k == 27:

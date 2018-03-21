@@ -5,24 +5,22 @@
 import roslib
 
 roslib.load_manifest('exercise3')
-import math
 import sys
 import rospy
 from nav_msgs.msg import OccupancyGrid
-import tf2_ros
 import numpy as np
 from geometry_msgs.msg import Point, Twist
-from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 from actionlib import SimpleActionClient
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from constants import ACTION_CLIENT_STATUSES
+from move_base_msgs.msg import MoveBaseAction
+from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT
 from moves import rotate
+from util import point_2_base_goal
 
 
 class MapGoals:
 
     def map_callback(self, data):
-        print("Map callbasck")
+        print("Map callback")
         size_x = data.info.width
         size_y = data.info.height
         self.cv_map = np.zeros(shape=(size_y, size_x))
@@ -51,52 +49,43 @@ class MapGoals:
                 else:
                     print('Error at i:' + str(grid[i][j]))
 
-
         p = Point(5.0, 2.0, 0.0)
-        print("Requesting initial goal with: {}", p)
+        print("Requesting initial goal with: [x: {} y: {} y: {}]", p.x, p.y, p.z)
         self.goal_request_pub.publish(p)
 
-
-    def transform_point(self, point):
+    def transform_map_point(self, point):
         _, size_y = self.cv_map.shape
-        return Point(point.x * self.map_resolution + self.map_transform.position.x,
-                  (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
+        transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
+                            (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
 
-    def point_2_base_goal(self, point):
-        goal = PoseStamped()
-        goal.header.frame_id = "map"
-        goal.pose.orientation.w = 1
-        goal.pose.position = point
-        goal.header.stamp = rospy.Time(0)
-        move_base_goal = MoveBaseGoal()
-        move_base_goal.target_pose = goal
-        return move_base_goal
+        print("Transforming point [x: {} y: {} z: {}] -> {x: {} y: {} z :{}]".format(point.x, point.y, point.z,
+                                                                                     transformed.x, transformed.y,
+                                                                                     transformed.z))
+        return transformed
 
     def goal_callback(self, point):
-        transformed =self.transform_point(point)
-        print("Transofrming point {} -> {}".format(point, transformed))
+        print("Goal callback")
+        transformed = self.transform_map_point(point)
+        move_base_goal = point_2_base_goal(transformed)
 
-        move_base_goal = self.point_2_base_goal(transformed)
         self.action_client.send_goal(move_base_goal)
-        self.action_client.wait_for_result(rospy.Duration(60))
+        self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-        rotate(self.velocity_publisher, 30, 390)
-        
+
+        print("Rotating for angle: {} with speed: {}".format(ROTATE_ANGLE, ROTATE_SPEED))
+        rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
+
+        print("Requesting new goal")
         self.goal_request_pub.publish(point)
 
     def __init__(self):
         rospy.init_node('map_goals')
-
         self.action_client = SimpleActionClient("move_base", MoveBaseAction)
         self.action_client.wait_for_server()
-
         self.cv_map = None
         self.map_transform = None
-        self.tf2_buffer = tf2_ros.Buffer()
-        self.tf2_listener = tf2_ros.TransformListener(self.tf2_buffer)
         self.map_resolution = 0
-        self.goal_pub = rospy.Publisher("goal", PoseStamped, queue_size=10)
         self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
         self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.map_callback)
