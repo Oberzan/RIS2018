@@ -19,7 +19,7 @@ using namespace cv;
 Mat cv_map;
 float map_resolution = 0;
 tf::Transform map_transform;
-
+int size_y = 0;
 
 ros::Publisher goal_pub;
 ros::Subscriber map_sub;
@@ -29,7 +29,7 @@ ros::Subscriber goal_response_sub;
 void mapCallback(const nav_msgs::OccupancyGridConstPtr &msg_map)
 {
     int size_x = msg_map->info.width;
-    int size_y = msg_map->info.height;
+    size_y = msg_map->info.height;
 
     if ((size_x < 3) || (size_y < 3))
     {
@@ -116,16 +116,18 @@ void goalCallback(const geometry_msgs::Point &point)
 
     int v = (int)cv_map.at<unsigned char>(point.y, point.x);
 
-    ROS_INFO("gC -> Moving to (x: %d, y: %d)", (int)point.x, (int)point.y);
-
+    
     if (v != 255)
     {
         return;
     }
 
-    tf::Point pt((float)point.x * map_resolution, (float)point.y * map_resolution, 0.0);
+    tf::Point pt((float)point.x * map_resolution, (float)(size_y - point.y) * map_resolution, 0.0);
     tf::Point transformed = map_transform * pt;
 
+    ROS_INFO("gC -> Moving to (x: %d, y: %d)", (int)point.x, (int)point.y);
+
+    ROS_INFO("gC -> Moving to (x: %f, y: %f)", transformed.x(), transformed.y());
 
 
     /*** Sending MoveBaseGoal with ActionClient to /move_base/goal ***/
@@ -157,7 +159,7 @@ void goalCallback(const geometry_msgs::Point &point)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "map_goals");
+    ros::init(argc, argv, "map_goals_cpp");
     ros::NodeHandle n;
 
     map_sub = n.subscribe("map", 10, &mapCallback);

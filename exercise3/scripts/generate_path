@@ -41,9 +41,9 @@ class Generator:
         for p in self.goals:
             cv2.circle(pimg, (p.x, p.y), 2, (0, 255, 0), -1)
 
-        print("Drawing image")
-        cv2.imshow('image', pimg)
-        print("Finished drawing")
+        # print("Drawing image")
+        # cv2.imshow('image', pimg)
+        # print("Finished drawing")
 
     def __init__(self):
         rospy.init_node('generate_path')

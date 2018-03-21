@@ -12,7 +12,7 @@ import tf2_ros
 import numpy as np
 import time
 from geometry_msgs.msg import Point
-from tf2_geometry_msgs import PoseStamped, PointStamped
+from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped, PointStamped, do_transform_pose
 from move_base_msgs.msg import MoveBaseGoal
 #import yaml
 
@@ -21,22 +21,22 @@ class MapGoals:
     def map_callback(self, data):
         print(data)
         size_x = data.info.width
-        size_y = data.info.height
-        self.cv_map = np.zeros(shape = (size_y, size_x))
+        self.size_y = data.info.height
+        self.cv_map = np.zeros(shape = (self.size_y, size_x))
 
-        if size_x < 3 or size_y < 3:
+        if size_x < 3 or self.size_y < 3:
             print('Size < 3')
-            # print(f'Map size is only x: {size_x},  y: {size_y} . Not running map to image conversion')
+            # print(f'Map size is only x: {size_x},  y: {self.size_y} . Not running map to image conversion')
 
 
         rows, columns  = self.cv_map.shape
 
 
-        if rows != size_y and columns != size_x:
-            self.cv_map = np.array([size_y, size_x])
+        if rows != self.size_y and columns != size_x:
+            self.cv_map = np.array([self.size_y, size_x])
 
         self.map_resolution = data.info.resolution
-
+        self.map_transform = data.info.origin
 
         print(type(data.info.origin))
         p = PointStamped()
@@ -56,10 +56,10 @@ class MapGoals:
 
         print(self.map_transform)
         
-        grid = np.flip(np.reshape(data.data, (size_y, size_x)), 0)
+        grid = np.flip(np.reshape(data.data, (self.size_y, size_x)), 0)
 
 
-        for i in range(size_y):
+        for i in range(self.size_y):
             for j in range(size_x):
                 if grid[i][j] == -1:
                     self.cv_map[i][j] = 127
@@ -85,34 +85,48 @@ class MapGoals:
 
 
     def goal_callback(self, point):
-        print("goal_callback")
-        pt = PointStamped()
-        pt.point.x = point.x * self.map_resolution
-        pt.point.y = point.y * self.map_resolution
-        pt.point.z = 0.0
-        pt.header.frame_id = "map"
-        pt.header.stamp = rospy.Time(0)
-        print(pt)
-        pointRobot = self.tf2_buffer.transform(pt, "base_link")
-        print(type(pointRobot))
+        print("\ngoal_callback")
+        print(point)
+
+        # pt = PointStamped()
+        # pt.point.x = point.x * self.map_resolution
+        # pt.point.y = point.y * self.map_resolution
+        # pt.point.z = 0.0
+        # pt.header.frame_id = "map"
+        # pt.header.stamp = rospy.Time(0)
+        # print(pt)
+        # pointRobot = self.tf2_buffer.transform(pt, "base_link")
+        # print(type(pointRobot))
         
-        print(self.map_resolution)
-        print(pointRobot)
-        #transformed = self.tf2_buffer.tra  #self.map_transform * pt
+        # print(self.map_resolution)
+        # print(pointRobot)
+        
+        # print(self.map_resolution)
+        # print(self.map_transform)
+        p = Point(point.x * self.map_resolution + self.map_transform.position.x, \
+                 (self.size_y - point.y) * self.map_resolution + self.map_transform.position.y, \
+                 0)
+        # p = Point(point.x * self.map_resolution, (self.size_y - point.y) * self.map_resolution, 0)
+        # transformed = do_transform_pose(p, self.map_transform) #self.map_transform * pt
+        print("Transformed:")
+        print(p)
+
+        #transformed = self.map_transform * pt
 
 
-        # goal = PoseStamped()
+        goal = PoseStamped()
 
-        # goal.header.frame_id = "map"
-        # goal.pose.orientation.w = 1
-        # goal.pose.position.x = transformed.x()
-        # goal.pose.position.y = -transformed.y()
-        # goal.header.stamp = rospy.get_time().secs
+        goal.header.frame_id = "map"
+        goal.pose.orientation.w = 1
+        goal.pose.position = p
+        #goal.pose.position.y = -transformed.y()
+        goal.header.stamp = rospy.Time(0)
+        print("\nPoseStamped:")
+        print(goal)
 
+        self.goal_pub.publish(goal)
 
-        #self.goal_pub.publish(goal)
-
-        #self.goal_request_pub.publish(point)
+        self.goal_request_pub.publish(point)
 
 
     def __init__(self):
