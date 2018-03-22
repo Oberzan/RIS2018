@@ -72,7 +72,6 @@ class MapGoals:
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-
         print("Rotating for angle: {} with speed: {}".format(ROTATE_ANGLE, ROTATE_SPEED))
         rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
 

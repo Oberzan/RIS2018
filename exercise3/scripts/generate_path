@@ -4,87 +4,46 @@ import roslib
 
 roslib.load_manifest('exercise3')
 import rospy
-from std_msgs.msg import String
-from geometry_msgs.msg import Point
-
-import numpy as np
 import cv2
-import yaml
-import time
+from geometry_msgs.msg import Point
+from util import erode_image, generate_goals, nearest_goal
+from draw import draw_with_goals
 
 
-class Generator:
+class GoalGenerator:
 
     def pointCallback(self, data):
+        new_goal, dist = nearest_goal(data, self.goals)
+        self.goals.remove(new_goal)
+        draw_with_goals(self.img, self.goals)
 
-        max_dist = 999999999
-
-        for p in self.goals:
-            dist = ((data.x - p.x) ** 2 + (data.y - p.y) ** 2) ** 0.5
-            if dist < max_dist:
-                c_goal = p
-                max_dist = dist
-
-        self.goals.remove(c_goal)
-        self.drawImg()
-
-        print("Publishsing point:\n" + str(p) +
+        print("Publishsing point:\n" + str(new_goal) +
               "\n at distance: " + str(dist))
         print("Remaining points: " + str(len(self.goals)) + "\n")
 
-        self.pub.publish(c_goal)
-
-        # rospy.sleep(5)
-
-    def drawImg(self):
-        pimg = self.img.copy()
-        step = rospy.get_param('~step')
-        for p in self.goals:
-            cv2.circle(pimg, (p.x, p.y), 2, (0, 255, 0), -1)
-
-        # print("Drawing image")
-        cv2.imshow('image', pimg)
-        # print("Finished drawing")
+        self.pub.publish(new_goal)
 
     def __init__(self):
         rospy.init_node('generate_path')
-        # Load an color image in grayscale
-
-        self.goals = set()
 
         rospy.Subscriber("/goal/request", Point, self.pointCallback)
         self.pub = rospy.Publisher(
             '/goal/response', Point, queue_size=10, latch=True)
 
-        with open(rospy.get_param('~img_yaml'), 'r') as stream:
-            try:
-                stream = yaml.load(stream)
-                start_x = stream["origin"][0]
-                start_y = stream["origin"][1]
-            except yaml.YAMLError as exc:
-                print(exc)
-        print(stream)
-
         self.img = cv2.imread(rospy.get_param('~img'), 0)
-        print(self.img)
-        self.height, self.width = self.img.shape
 
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.namedWindow("Erosion Demo", cv2.WINDOW_NORMAL)
 
-        e = rospy.get_param('~erosion')
-        kernel = np.ones((e, e), np.uint8)
-        self.erosion = cv2.erode(self.img, kernel, iterations=1)
+        erosion_factor = rospy.get_param('~erosion')
+        goal_step = rospy.get_param('~step')
 
-        step = rospy.get_param('~step')
-        for y in range(step, self.height, step):
-            for x in range(step, self.width, step):
-                if self.erosion[y][x] > 250:
-                    self.goals.add(Point(x, y, 0))
+        self.erosion = erode_image(self.img, erosion_factor)
+        self.goals = generate_goals(self.erosion, goal_step)
 
-        print(self.goals)
-        self.drawImg()
+        print("Generated {} goals".format(len(self.goals)))
 
+        draw_with_goals(self.img, self.goals)
         cv2.imshow("Erosion Demo", self.erosion)
 
         while True:
@@ -95,4 +54,4 @@ class Generator:
 
 
 if __name__ == '__main__':
-    g = Generator()
+    _ = GoalGenerator()
