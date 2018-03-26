@@ -22,7 +22,7 @@ class Breadcrumbs():
 			
 		except Exception as e:
 			#(tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException)
-			print e
+			print(e)
 			pass
 
 		markers = MarkerArray()

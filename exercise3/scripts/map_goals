@@ -17,7 +17,7 @@ from moves import rotate
 from util import point_2_base_goal
 
 
-class MapGoals:
+class MapGoals():
 
     def map_callback(self, data):
         print("Map callback")
