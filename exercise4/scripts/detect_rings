@@ -27,6 +27,8 @@ class The_Ring:
 		# A help variable for holding the dimensions of the image
 		self.dims = (0, 0, 0)
 
+		self.img_id = 1
+
 		# Marker array object used for visualizations
 		self.marker_array = MarkerArray()
 		self.marker_num = 1
@@ -102,6 +104,12 @@ class The_Ring:
 		# Set the dimensions of the image
 		self.dims = cv_image.shape
 
+		#cv2.imwrite("img-{}.png".format(self.img_id),cv_image)
+		self.img_id+=1
+
+		#crop top and bottom
+		cv_image = cv_image[140:320,:]
+
 		# Tranform image to gayscale
 		gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
@@ -109,20 +117,24 @@ class The_Ring:
 		img = cv2.equalizeHist(gray)
 
 		# Binarize the image
-		ret, thresh = cv2.threshold(img, 255, 255, cv2.THRESH_OTSU)
+		_, thresht = cv2.threshold(img, 255, 255, cv2.THRESH_TRIANGLE)
 
-		#cv2.imshow("Image window",thresh)
+		_, thresho = cv2.threshold(img, 255, 255, cv2.THRESH_OTSU)
+
+		#cv2.imshow("Image window",thresho)
 		#cv2.waitKey(1)
 
 		# Extract contours
-		_, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+		_, contourt, _ = cv2.findContours(thresho, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+		_, contouro, _ = cv2.findContours(thresho, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
 		# Example how to draw the contours
 		# cv2.drawContours(img, contours, -1, (255, 0, 0), 3)
 
 		# Fit elipses to all extracted contours
 		elps = []
-		for cnt in contours:
+		for cnt in contouro:
 			#print(cnt)
 			#print(cnt.shape)
 			if cnt.shape[0] >= 20:
@@ -167,10 +179,7 @@ class The_Ring:
 			y_min = y1 if y1 > 0 else 0
 			y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
 
-			#depth_image = self.bridge.imgmsg_to_cv2(self.depth_img, "16UC1")
-			part = self.depth_image[x_min:x_max,y_min:y_max,:]
-			dep = np.mean(part)
-			#self.get_pose(e1, float(np.mean(self.depth_image[x_min:x_max,y_min:y_max,:]))/1000.0)
+			#self.get_pose(e1, float(np.mean(self.depth_image[x_min:x_max,y_min:y_max]))/1000.0)
 
 
 		cv2.imshow("Image window",cv_image)
