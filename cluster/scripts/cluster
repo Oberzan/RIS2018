@@ -3,19 +3,49 @@ import roslib
 
 roslib.load_manifest('cluster')
 import rospy
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Vector3, Pose
 from util import point_distance
 from data import ClusterPoint
+from visualization_msgs.msg import Marker, MarkerArray
+from std_msgs.msg import ColorRGBA
+
 
 class Clusterer():
 
     def __init__(self):
         rospy.init_node('cluster')
         self.centers = []
+        self.markers = MarkerArray()
         self.CENTER_THRESHOLD = 0.1
         self.MIN_CENTER_DETECTIONS = 10
 
+
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
+        self.markers_pub = rospy.Publisher(
+            'markers', MarkerArray, queue_size=1000)
+
+    def publish_markers(self):
+        print("Publishing {} markers.".format(len(self.centers)))
+        self.markers_pub.publish(self.markers)
+
+    def point_2_marker(self, point_world):
+
+        pose = Pose()
+        pose.position.x = point_world.point.x
+        pose.position.y = point_world.point.y
+        pose.position.z = point_world.point.z
+        marker = Marker()
+        marker.header.stamp = rospy.Time(0)
+        marker.header.frame_id = "map"
+        marker.pose = pose
+        marker.type = Marker.CUBE
+        marker.action = Marker.ADD
+        marker.frame_locked = False
+        marker.lifetime = rospy.Duration.from_sec(30)
+        marker.id = len(self.markers)
+        marker.scale = Vector3(0.1, 0.1, 0.1)
+        marker.color = ColorRGBA(1, 0, 0, 1)
+        return marker
 
     def point_callback(self, p):
 
@@ -42,12 +72,20 @@ class Clusterer():
             new_center = closest_center.move_center(p)
             self.centers[ix] = new_center
 
+            old_marker = self.markers[ix]
+            old_marker.pose.position.x = new_center.x
+            old_marker.pose.position.y = new_center.y
+            self.markers[ix] = old_marker
+
             if n + 1 == self.MIN_CENTER_DETECTIONS:
                 print("Publishing center of a circle at x: {}, y: {}".format(new_center.x, new_center.y))
                 ## self.publisher.publish(...)
         else:
             self.centers.append(ClusterPoint(p.x, p.y, 1))
+            self.markers.append(self.point_2_marker(p))
             print("Adding new center")
+
+        self.publish_markers()
 
 
 if __name__ == '__main__':

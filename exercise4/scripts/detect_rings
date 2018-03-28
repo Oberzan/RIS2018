@@ -80,6 +80,10 @@ class The_Ring:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
+
+        print("Publishing point to cluster: " + point_world.point)
+        self.cluster_publisher.publish(point_world.point)
+
         # Create a marker used for visualization
         self.marker_num += 1
         marker = Marker()
@@ -148,10 +152,6 @@ class The_Ring:
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
             self.get_pose(
                 e1, float(np.mean(self.depth_image[x_min:x_max, y_min:y_max]))/1000.0)
-
-
-            print(c)
-            ## self.cluster_publisher.publish(c)
 
 
         cv2.imshow("Image window", cv_image)
