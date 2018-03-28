@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+import roslib
+roslib.load_manifest('speaker')
+import rospy
+from std_msgs.msg import String
+from sound_play.libsoundplay import SoundClient
+
+class Speaker():
+
+    def say_callback(self, sentence):
+        self.soundhandle.say(sentence)
+        print("Saying {}".format(sentence))
+
+    def __init__(self):
+        self.soundhandle = SoundClient()
+        _ = rospy.Subscriber("speaker/say", String, self.say_callback)
+
+
+if __name__ == '__main__':
+    _ = Speaker()
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print("Shutting down")
