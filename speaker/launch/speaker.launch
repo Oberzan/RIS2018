@@ -1,0 +1,8 @@
+<launch>
+
+  <node pkg="speaker" type="speaker" name="speaker" output="screen">
+  </node>
+  <node pkg="sound_play" type="soundplay_node" name="soundplay_node" output="screen">
+  </node>
+
+</launch>
