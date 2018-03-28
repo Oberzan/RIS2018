@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="/home/team_eta/ROS/src/exercise3/launch/start_robot.launch">
+  </include>
+
+  <include file="/home/team_eta/ROS/src/exercise4/launch/amcl_demo.launch">
+    <arg name="map_file" value="/home/team_eta/ROS/ex3.yaml"/>
+  </include>
+
+</launch>
