@@ -11,7 +11,7 @@ import numpy as np
 import tf2_geometry_msgs
 import tf2_ros
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import PointStamped, Vector3, Pose
+from geometry_msgs.msg import PointStamped, Vector3, Pose, Point
 from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
@@ -46,6 +46,9 @@ class The_Ring:
         # Object we use for transforming between coordinate frames
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
+
+
+        self.cluster_publisher = rospy.Publisher('cluster/point', Point, queue_size=1000)
 
     def get_pose(self, e, dist):
         # Calculate the position of the detected ellipse
@@ -145,6 +148,12 @@ class The_Ring:
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
             self.get_pose(
                 e1, float(np.mean(self.depth_image[x_min:x_max, y_min:y_max]))/1000.0)
+
+
+            print(c)
+            ## self.cluster_publisher.publish(c)
+
+
         cv2.imshow("Image window", cv_image)
         cv2.waitKey(1)
 
