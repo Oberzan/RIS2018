@@ -11,33 +11,45 @@ class Clusterer():
 
     def __init__(self):
         rospy.init_node('cluster')
-        self.points = set()
-
+        self.centers = []
+        self.CENTER_THRESHOLD = 0.1
+        self.MIN_CENTER_DETECTIONS = 10
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
-        _ = rospy.Subscriber("cluster/request_target_proba", Point, self.request_callback)
-        _ = rospy.Subscriber("cluster/request_target", Point, self.request_target)
-        self.proba_publisher = rospy.Publisher("cluster/response_target_proba", Point, queue_size=10)
 
 
-    def request_target(self, p):
-        ## TODO ignore already detected ones
-        ## Calculates nearest circle to robot
-        self.proba_publisher.publish(p)
 
 
     def point_callback(self, p):
-        self.points.add(p)
-        print("Adding point: {} to points. Numebr of points: {}".format(p, len(self.points)))
+        closest_center = None
+        min_dist = 999999999
+        ix = 0
+        for center_ix, center in enumerate(self.centers):
+            dist = ((p.x - center[0]) ** 2 + (p.y - center[1]) ** 2) ** 0.5
+            if dist < min_dist and dist < self.CENTER_THRESHOLD:
+                if closest_center:
+                    print("Detected in multiple centers")
 
+                closest_center = center
+                min_dist = dist
+                ix = center_ix
 
-    ## Return probability that a point is a circle
-    ## (x,y) is Point, z is probability
-    def request_callback(self, p):
-        calculation = 20.0 ## Fancy clustering calculation
-        p.z = calculation
-        self.proba_publisher.publish(p)
+        if closest_center:
+            n = closest_center[2]
+            if n >= self.MIN_CENTER_DETECTIONS:
+                return
 
+            print("Updating center")
+            new_x = (n * closest_center[0] + p.x) / (n + 1)
+            new_y = (n * closest_center[1] + p.y) / (n + 1)
+            self.centers[ix] = [new_x, new_y, n + 1]
+
+            if n + 1 == self.MIN_CENTER_DETECTIONS:
+                print("Publishing center of a circle at x: {}, y: {}".format(new_x, new_y))
+                ## self.publisher.publish(...)
+        else:
+            self.centers.append([p.x, p.y, 1])
+            print("Adding new center")
 
 
 
