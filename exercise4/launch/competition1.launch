@@ -7,4 +7,7 @@
     <arg name="map_file" value="/home/team_eta/ROS/ex3.yaml"/>
   </include>
 
+  <include file="/home/team_eta/ROS/src/speaker/launch/speaker.launch">
+  </include>
+
 </launch>

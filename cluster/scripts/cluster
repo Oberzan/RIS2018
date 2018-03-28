@@ -4,9 +4,6 @@ roslib.load_manifest('cluster')
 import rospy
 from geometry_msgs.msg import Point
 
-
-
-
 class Clusterer():
 
     def __init__(self):
@@ -16,9 +13,6 @@ class Clusterer():
         self.MIN_CENTER_DETECTIONS = 10
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
-
-
-
 
     def point_callback(self, p):
         closest_center = None
@@ -50,7 +44,6 @@ class Clusterer():
         else:
             self.centers.append([p.x, p.y, 1])
             print("Adding new center")
-
 
 
 if __name__ == '__main__':
