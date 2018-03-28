@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 import roslib
+
 roslib.load_manifest('cluster')
 import rospy
 from geometry_msgs.msg import Point
+from util import point_distance
+from data import ClusterPoint
 
 class Clusterer():
 
@@ -15,11 +18,13 @@ class Clusterer():
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
 
     def point_callback(self, p):
+
         closest_center = None
         min_dist = 999999999
         ix = 0
+
         for center_ix, center in enumerate(self.centers):
-            dist = ((p.x - center[0]) ** 2 + (p.y - center[1]) ** 2) ** 0.5
+            dist = point_distance(p, center)
             if dist < min_dist and dist < self.CENTER_THRESHOLD:
                 if closest_center:
                     print("Detected in multiple centers")
@@ -29,25 +34,23 @@ class Clusterer():
                 ix = center_ix
 
         if closest_center:
-            n = closest_center[2]
+            n = closest_center.n
             if n >= self.MIN_CENTER_DETECTIONS:
                 return
 
             print("Updating center")
-            new_x = (n * closest_center[0] + p.x) / (n + 1)
-            new_y = (n * closest_center[1] + p.y) / (n + 1)
-            self.centers[ix] = [new_x, new_y, n + 1]
+            new_center = closest_center.move_center(p)
+            self.centers[ix] = new_center
 
             if n + 1 == self.MIN_CENTER_DETECTIONS:
-                print("Publishing center of a circle at x: {}, y: {}".format(new_x, new_y))
+                print("Publishing center of a circle at x: {}, y: {}".format(new_center.x, new_center.y))
                 ## self.publisher.publish(...)
         else:
-            self.centers.append([p.x, p.y, 1])
+            self.centers.append(ClusterPoint(p.x, p.y, 1))
             print("Adding new center")
 
 
 if __name__ == '__main__':
-
 
     _ = Clusterer()
     try:
