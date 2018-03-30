@@ -25,11 +25,11 @@ def erode_image(img, erosion_factor):
 
 def generate_goals(img, step):
     height, width = img.shape
-    goals = set()
+    goals = []
     for y in range(step, height, step):
         for x in range(step, width, step):
             if img[y][x] > 250:
-                goals.add((x, y))
+                goals.append((x, y))
     return goals
 
 
