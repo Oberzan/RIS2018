@@ -29,6 +29,7 @@ def rotate(velocity_publisher, speed, angle, clockwise=True):
     current_angle = 0
 
     while current_angle < relative_angle:
+        print("ROTATING")
         velocity_publisher.publish(vel_msg)
         t1 = rospy.Time.now().to_sec()
         current_angle = angular_speed * (t1 - t0)

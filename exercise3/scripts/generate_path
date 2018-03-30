@@ -6,7 +6,7 @@ roslib.load_manifest('exercise3')
 import rospy
 import cv2
 from geometry_msgs.msg import Point
-from move_base_msgs.msg import MoveBaseGoal
+from move_base_msgs.msg import MoveBaseActionGoal
 from util import erode_image, generate_goals, nearest_goal, point_distance
 from draw import draw_with_goals
 
@@ -46,7 +46,7 @@ class GoalGenerator:
 
 
     def move_base_callback(self, move_base_goal):
-        transformed = move_base_goal.target_pose.pose.position
+        transformed = move_base_goal.goal.target_pose.pose.position
         print("Got transformed goal: {}".format(transformed))
         self.transformed_goals.append(transformed)
 
@@ -82,7 +82,7 @@ class GoalGenerator:
         self.transformed_goals = []
 
 
-        _ = rospy.Subscriber("move_base/goal", MoveBaseGoal, self.move_base_callback)
+        _ = rospy.Subscriber("move_base/goal", MoveBaseActionGoal, self.move_base_callback)
 
 
 
