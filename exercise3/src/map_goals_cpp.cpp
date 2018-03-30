@@ -116,7 +116,7 @@ void goalCallback(const geometry_msgs::Point &point)
 
     int v = (int)cv_map.at<unsigned char>(point.y, point.x);
 
-    
+
     if (v != 255)
     {
         return;
@@ -152,7 +152,7 @@ void goalCallback(const geometry_msgs::Point &point)
 
     /*** Sending Point to /move_base_simple/goal ***/
     // goal_pub.publish(goal);
-    
+
     ROS_INFO("Request a goal. Current point: %d,%d\n", (int)point.x, (int)point.y);
     goal_request_pub.publish(point);
 }
@@ -170,13 +170,13 @@ int main(int argc, char **argv)
 
     ros::Rate loop_rate(1);
     loop_rate.sleep();
-    
+
     geometry_msgs::Point p;
     p.x = 5.0;
     p.y = 2.0;
     p.z = 0.0;
     ROS_INFO("Publishing to (x: %d, y: %d)", (int)p.x, (int)p.y);
-    goal_request_pub.publish(p);   
+    goal_request_pub.publish(p);
 
     while (ros::ok())
     {

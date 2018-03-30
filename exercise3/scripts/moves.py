@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 
 
 def rotate(velocity_publisher, speed, angle, clockwise=True):
+    print("Started rotating")
     vel_msg = Twist()
 
     # Converting from angles to radians
@@ -32,6 +33,7 @@ def rotate(velocity_publisher, speed, angle, clockwise=True):
         velocity_publisher.publish(vel_msg)
         t1 = rospy.Time.now().to_sec()
         current_angle = angular_speed * (t1 - t0)
+    print("Finished rotating.")
 
     vel_msg.angular.z = 0
     velocity_publisher.publish(vel_msg)

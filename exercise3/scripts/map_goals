@@ -14,7 +14,7 @@ from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
 from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT
 from moves import rotate
-from util import point_2_base_goal
+from util import point_2_base_goal, flip
 
 
 class MapGoals():
@@ -36,7 +36,8 @@ class MapGoals():
         self.map_resolution = data.info.resolution
         self.map_transform = data.info.origin
 
-        grid = np.flip(np.reshape(data.data, (size_y, size_x)), 0)
+
+        grid = flip(np.reshape(data.data, (size_y, size_x)), 0)
 
         for i in range(size_y):
             for j in range(size_x):
@@ -58,12 +59,20 @@ class MapGoals():
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
                             (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
 
-        print("Transforming point [x: {} y: {} z: {}] -> {x: {} y: {} z :{}]".format(point.x, point.y, point.z,
+        print("Transforming point [x: {} y: {} z: {}] -> [x: {} y: {} z :{}]".format(point.x, point.y, point.z,
                                                                                      transformed.x, transformed.y,
                                                                                      transformed.z))
         return transformed
 
+
+
     def goal_callback(self, point):
+        if not point:
+            print("All points visited!")
+            ## TODO get robot location
+            self.circle_request_publisher.publish(None)
+
+
         print("Goal callback")
         transformed = self.transform_map_point(point)
         move_base_goal = point_2_base_goal(transformed)
@@ -72,8 +81,9 @@ class MapGoals():
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-        print("Rotating for angle: {} with speed: {}".format(ROTATE_ANGLE, ROTATE_SPEED))
-        rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
+        if ACTION_CLIENT_STATUSES[self.action_client.get_state()] == 'SUCCEEDED':
+            print("Rotating for angle: {} with speed: {}".format(ROTATE_ANGLE, ROTATE_SPEED))
+            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
 
         print("Requesting new goal")
         self.goal_request_pub.publish(point)
@@ -89,6 +99,33 @@ class MapGoals():
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
         self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.map_callback)
         self.velocity_publisher = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
+
+        self.circle_target_subscriber = rospy.Subscriber("cluster/goal", Point, self.cluster_point_callback)
+        self.circle_request_publisher = rospy.Publisher("cluster/request", Point, queue_size=10)
+
+
+        self.viewpoint_publisher = rospy.Publisher("/request_viewpoint", Point, queue_size=10)
+        self.viewpoint_subscriber = rospy.Subscriber("/request_response", Point, self.viewpoint_callback)
+
+
+
+    def viewpoint_callback(self, viewpoint):
+        move_base_goal = point_2_base_goal(viewpoint)
+
+        self.action_client.send_goal(move_base_goal)
+        self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
+        print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
+
+
+
+
+    def cluster_point_callback(self, circle_point):
+        print("Recieved and asking for viewpoint: {}".format(circle_point))
+        self.viewpoint_publisher.publish(circle_point)
+
+
+
+
 
 
 def main(args):
