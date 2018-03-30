@@ -81,7 +81,7 @@ class The_Ring:
         pose.position.z = point_world.point.z
 
 
-        print("Publishing point to cluster: " + point_world.point)
+        print("Publishing point to cluster: \n" , point_world.point)
         self.cluster_publisher.publish(point_world.point)
 
         # Create a marker used for visualization
@@ -115,6 +115,7 @@ class The_Ring:
                         ((e1[0][0] - e2[0][0]) ** 2 + (e1[0][1] - e2[0][1]) ** 2))
                     if dist < 5:
                         candidates.append((e1, e2))
+                        print("angle: ",e1[2])
         return candidates
 
     def image_callback(self, data):
@@ -123,7 +124,10 @@ class The_Ring:
         except CvBridgeError as e:
             print(e)
         self.dims = cv_image.shape
-        cv_image = cv_image[140:320, :]
+        cv_image[0:140]=0
+        cv_image[300:]=0
+        #cv2.GaussianBlur(cv_image,(9,9),4)
+        #cv2.medianBlur(cv_image,5)
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
         _, thresht = cv2.threshold(img, 255, 255, cv2.THRESH_TRIANGLE)
@@ -150,9 +154,10 @@ class The_Ring:
             y2 = int(center[1] + size / 2)
             y_min = y1 if y1 > 0 else 0
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
-            self.get_pose(
-                e1, float(np.mean(self.depth_image[x_min:x_max, y_min:y_max]))/1000.0)
-
+            median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
+            print(median)
+	    if(median<1000):
+	            self.get_pose(e1, float(median)/1000.0)
 
         cv2.imshow("Image window", cv_image)
         cv2.waitKey(1)
@@ -162,6 +167,7 @@ class The_Ring:
             self.depth_image = self.bridge.imgmsg_to_cv2(data, "16UC1")
         except CvBridgeError as e:
             print(e)
+        
 
 def main(args):
 
