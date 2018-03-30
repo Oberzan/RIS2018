@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import roslib
+import math
 # roslib.load_manifest('exercise4')
 import sys
-import rospy
+
 import cv2
-import tf
 import numpy as np
+import roslib
+import rospy
+import tf
 import tf2_geometry_msgs
 import tf2_ros
-from sensor_msgs.msg import Image
-from geometry_msgs.msg import PointStamped, Vector3, Pose, Point
 from cv_bridge import CvBridge, CvBridgeError
-from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
+from sensor_msgs.msg import Image
 from std_msgs.msg import ColorRGBA
+from visualization_msgs.msg import Marker, MarkerArray
 
 
 class The_Ring:
@@ -34,10 +36,10 @@ class The_Ring:
         self.marker_num = 1
 
         # Subscribe to the image and/or depth topic
-        self.image_sub = rospy.Subscriber(
-            "/camera/rgb/image_color", Image, self.image_callback)
         self.depth_sub = rospy.Subscriber(
             "/camera/depth_registered/image_raw", Image, self.depth_callback)
+        self.image_sub = rospy.Subscriber(
+            "/camera/rgb/image_color", Image, self.image_callback)
 
         # Publiser for the visualization markers
         self.markers_pub = rospy.Publisher(
@@ -47,8 +49,8 @@ class The_Ring:
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
-
-        self.cluster_publisher = rospy.Publisher('cluster/point', Point, queue_size=1000)
+        self.cluster_publisher = rospy.Publisher(
+            'cluster/point', Point, queue_size=1000)
 
     def get_pose(self, e, dist):
         # Calculate the position of the detected ellipse
@@ -80,8 +82,7 @@ class The_Ring:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
-
-        print("Publishing point to cluster: \n" , point_world.point)
+        print("Publishing point to cluster: \n", point_world.point)
         self.cluster_publisher.publish(point_world.point)
 
         # Create a marker used for visualization
@@ -101,73 +102,84 @@ class The_Ring:
 
         self.markers_pub.publish(self.marker_array)
 
-    def find_candidates(self, contours):
-        elps = [cv2.fitEllipse(cnt) for cnt in contours if cnt.shape[0] >= 20]
-        candidates = []
-        for n in range(len(elps)):
-            for m in range(n + 1, len(elps)):
-                e1 = elps[n]
-                e2 = elps[m]
-                diffwidth = abs(e1[1][1]-e2[1][1])
-                diffheight = abs(e1[1][0]-e2[1][0])
-                if 10 < diffwidth < 40 and 10 < diffheight < 40:
-                    dist = np.sqrt(
-                        ((e1[0][0] - e2[0][0]) ** 2 + (e1[0][1] - e2[0][1]) ** 2))
-                    if dist < 5:
-                        candidates.append((e1, e2))
-                        print("angle: ",e1[2])
-        return candidates
-
     def image_callback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
         self.dims = cv_image.shape
-        cv_image[0:140]=0
-        cv_image[300:]=0
-        #cv2.GaussianBlur(cv_image,(9,9),4)
-        #cv2.medianBlur(cv_image,5)
+
+        self.cropImage(cv_image, 150, 350)
+
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
-        _, thresht = cv2.threshold(img, 255, 255, cv2.THRESH_TRIANGLE)
-        _, thresho = cv2.threshold(img, 255, 255, cv2.THRESH_OTSU)
-        _, contourt, _ = cv2.findContours(
-            thresht, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        _, contouro, _ = cv2.findContours(
-            thresho, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        candidates = self.find_candidates(contouro)
-        candidates += self.find_candidates(contourt)
+
+        thresha = cv2.adaptiveThreshold(
+            img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 23, 25)
+
+        _, contoura, _ = cv2.findContours(
+            thresha, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        candidates = self.find_candidates(contoura)
+
         print("Candidates: ", len(candidates))
         for c in candidates:
             e1 = c[0]
             e2 = c[1]
-            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
-            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
+
             size = (e1[1][0]+e1[1][1])/2
             center = (e1[0][1], e1[0][0])
+
             x1 = int(center[0] - size / 2)
             x2 = int(center[0] + size / 2)
+
             x_min = x1 if x1 > 0 else 0
             x_max = x2 if x2 < cv_image.shape[0] else cv_image.shape[0]
+
             y1 = int(center[1] - size / 2)
             y2 = int(center[1] + size / 2)
+
             y_min = y1 if y1 > 0 else 0
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
-            median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
-            print(median)
-	    if(median<1000):
-	            self.get_pose(e1, float(median)/1000.0)
 
-        cv2.imshow("Image window", cv_image)
+            median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
+            #self.get_pose(e1, float(median)/1000.0)
+
+            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
+            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
+
+        cv2.imshow("Image", cv_image)
         cv2.waitKey(1)
+
+    def find_candidates(self, contours):
+        elps = [cv2.fitEllipse(cnt) for cnt in contours if cnt.shape[0] >= 20]
+        candidates = []
+        for n in range(len(elps)):
+            for m in range(n + 1, len(elps)):
+                candidates += self.isCircle(elps[n], elps[m])
+        return candidates
+
+    def isCircle(self, e1, e2):
+        (x1, y1), (majoraxis1, minoraxis1), angle1 = e1
+        (x2, y2), (majoraxis2, minoraxis2), angle2 = e2
+        center_to_center_distance = np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2))
+        majoraxisdiff = abs(majoraxis1-majoraxis2)
+        minoraxisdiff = abs(minoraxis1-minoraxis2)
+        if (center_to_center_distance < 5 and
+                10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
+            return [(e1, e2)]
+        return []
+
+    def cropImage(self, cv_image, top, bottom):
+        cv_image[0:top] = 0
+        cv_image[bottom:] = 0
 
     def depth_callback(self, data):
         try:
             self.depth_image = self.bridge.imgmsg_to_cv2(data, "16UC1")
         except CvBridgeError as e:
             print(e)
-        
+
 
 def main(args):
 
@@ -178,6 +190,7 @@ def main(args):
         print("Shutting down")
 
     cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     main(sys.argv)
