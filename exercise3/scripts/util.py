@@ -8,6 +8,17 @@ from geometry_msgs.msg import Point
 from move_base_msgs.msg import MoveBaseGoal
 
 
+def flip(m, axis):
+    if not hasattr(m, 'ndim'):
+        m = asarray(m)
+    indexer = [slice(None)] * m.ndim
+    try:
+        indexer[axis] = slice(None, None, -1)
+    except IndexError:
+        raise ValueError("axis=%i is invalid for the %i-dimensional input array"
+                         % (axis, m.ndim))
+    return m[tuple(indexer)]
+
 
 def point_2_base_goal(point, frame_id="map"):
     goal = PoseStamped()

@@ -14,7 +14,7 @@ from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
 from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT
 from moves import rotate
-from util import point_2_base_goal
+from util import point_2_base_goal, flip
 
 
 class MapGoals():
@@ -36,7 +36,8 @@ class MapGoals():
         self.map_resolution = data.info.resolution
         self.map_transform = data.info.origin
 
-        grid = np.flip(np.reshape(data.data, (size_y, size_x)), 0)
+
+        grid = flip(np.reshape(data.data, (size_y, size_x)), 0)
 
         for i in range(size_y):
             for j in range(size_x):
