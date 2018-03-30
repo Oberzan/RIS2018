@@ -143,7 +143,7 @@ class The_Ring:
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
 
             median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
-            #self.get_pose(e1, float(median)/1000.0)
+            self.get_pose(e1, float(median)/1000.0)
 
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
