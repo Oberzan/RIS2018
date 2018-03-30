@@ -10,7 +10,7 @@ from move_base_msgs.msg import MoveBaseGoal
 
 def flip(m, axis):
     if not hasattr(m, 'ndim'):
-        m = asarray(m)
+        m = np.asarray(m)
     indexer = [slice(None)] * m.ndim
     try:
         indexer[axis] = slice(None, None, -1)
