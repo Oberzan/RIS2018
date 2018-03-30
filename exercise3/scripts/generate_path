@@ -6,22 +6,50 @@ roslib.load_manifest('exercise3')
 import rospy
 import cv2
 from geometry_msgs.msg import Point
-from util import erode_image, generate_goals, nearest_goal
+from move_base_msgs.msg import MoveBaseAction
+from util import erode_image, generate_goals, nearest_goal, point_distance
 from draw import draw_with_goals
 
 
 class GoalGenerator:
 
+
     def pointCallback(self, data):
-        new_goal, dist = nearest_goal(data, self.goals)
-        self.goals.remove(new_goal)
-        draw_with_goals(self.img, self.goals)
+        if len(self.goals_left) == 0:
+            self.pub.publish(None)
+
+
+        new_goal, dist = nearest_goal(data, self.goals_left)
+        self.goals_left.remove(new_goal)
+        draw_with_goals(self.img, self.goals_left)
+
 
         print("Publishsing point:\n" + str(new_goal) +
               "\n at distance: " + str(dist))
-        print("Remaining points: " + str(len(self.goals)) + "\n")
+        print("Remaining points: " + str(len(self.goals_left)) + "\n")
 
         self.pub.publish(new_goal)
+
+
+    def circle_goal_viewpoint_request(self, estimated_circle_center):
+        print("Got request for nearest point to circle: {}".format(estimated_circle_center))
+
+        viewpoint = min(self.transformed_goals, key=lambda goal: point_distance(goal, estimated_circle_center))
+
+        print("Calculated viewpoint at: {}".format(viewpoint))
+
+
+        self.viewpoint_publisher.publish(viewpoint)
+
+
+
+
+
+    def move_base_callback(self, move_base_action):
+        transformed = move_base_action.action_goal.goal.target_pose.pose.position
+        print("Got transformed goal: {}".format(transformed))
+        self.transformed_goals.append(transformed)
+
 
     def __init__(self):
         rospy.init_node('generate_path')
@@ -29,6 +57,14 @@ class GoalGenerator:
         rospy.Subscriber("/goal/request", Point, self.pointCallback)
         self.pub = rospy.Publisher(
             '/goal/response', Point, queue_size=10, latch=True)
+
+
+        self.circle_nearest_subcriber = rospy.Subscriber("/request_viewpoint", Point, self.circle_goal_viewpoint_request)
+
+        self.viewpoint_publisher = rospy.Publisher("/response_viewpoint", Point, queue_size=100)
+
+
+
 
         self.img = cv2.imread(rospy.get_param('~img'), 0)
 
@@ -39,11 +75,20 @@ class GoalGenerator:
         goal_step = rospy.get_param('~step')
 
         self.erosion = erode_image(self.img, erosion_factor)
-        self.goals = generate_goals(self.erosion, goal_step)
+        self.goals_left = generate_goals(self.erosion, goal_step)
+        self.all_goals = self.goals_left[:]
 
-        print("Generated {} goals".format(len(self.goals)))
 
-        draw_with_goals(self.img, self.goals)
+        self.transformed_goals = []
+
+
+        _ = rospy.Subscriber("move_base", MoveBaseAction, self.move_base_callback)
+
+
+
+        print("Generated {} goals".format(len(self.all_goals)))
+
+        draw_with_goals(self.img, self.all_goals)
         cv2.imshow("Erosion Demo", self.erosion)
 
         while True:
