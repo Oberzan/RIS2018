@@ -15,7 +15,9 @@ class GoalGenerator:
 
 
     def pointCallback(self, data):
+        print("Got goal request!")
         if len(self.goals_left) == 0:
+            print("All points visited!")
             self.pub.publish(None)
 
 
@@ -37,8 +39,6 @@ class GoalGenerator:
         viewpoint = min(self.transformed_goals, key=lambda goal: point_distance(goal, estimated_circle_center))
 
         print("Calculated viewpoint at: {}".format(viewpoint))
-
-
         self.viewpoint_publisher.publish(viewpoint)
 
 
