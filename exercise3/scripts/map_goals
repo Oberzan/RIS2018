@@ -59,7 +59,7 @@ class MapGoals():
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
                             (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
 
-        print("Transforming point [x: {} y: {} z: {}] -> {x: {} y: {} z :{}]".format(point.x, point.y, point.z,
+        print("Transforming point [x: {} y: {} z: {}] -> [x: {} y: {} z :{}]".format(point.x, point.y, point.z,
                                                                                      transformed.x, transformed.y,
                                                                                      transformed.z))
         return transformed
