@@ -4,7 +4,9 @@ import numpy as np
 import cv2
 import rospy
 from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
+from geometry_msgs.msg import Point
 from move_base_msgs.msg import MoveBaseGoal
+
 
 
 def point_2_base_goal(point, frame_id="map"):
@@ -29,7 +31,10 @@ def generate_goals(img, step):
     for y in range(step, height, step):
         for x in range(step, width, step):
             if img[y][x] > 250:
-                goals.append((x, y))
+                p = Point()
+                p.x = x
+                p.y = y
+                goals.append(p)
     return goals
 
 
