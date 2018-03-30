@@ -140,7 +140,7 @@ void goalCallback(const geometry_msgs::Point &point)
     goal.header.frame_id = "map";
     goal.pose.orientation.w = 1;
     goal.pose.position.x = transformed.x();
-    goal.pose.position.y = -transformed.y();
+    goal.pose.position.y = transformed.y();
     goal.header.stamp = ros::Time::now();
 
     move_base_msgs::MoveBaseGoal goal1;
