@@ -57,7 +57,7 @@ class MapGoals():
     def transform_map_point(self, point):
         _, size_y = self.cv_map.shape
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
-                            (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
+                            (size_y - point.y) * self.map_resolution, 0)
 
         print("Transforming point [x: {} y: {} z: {}] -> [x: {} y: {} z :{}]".format(point.x, point.y, point.z,
                                                                                      transformed.x, transformed.y,
