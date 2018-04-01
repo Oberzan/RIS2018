@@ -15,13 +15,14 @@ import tf2_ros
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
 from sensor_msgs.msg import Image
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
 
 
 class The_Ring:
     def __init__(self):
         rospy.init_node('image_converter', anonymous=True)
+        self.engine_state = "default"
 
         # An object we use for converting images between ROS format and OpenCV format
         self.bridge = CvBridge()
@@ -52,6 +53,13 @@ class The_Ring:
         self.cluster_publisher = rospy.Publisher(
             'cluster/point', Point, queue_size=1000)
 
+        # Subscriber to get state of our main engine
+        self.engine_state_subscriber = rospy.Subscriber("engine/status", String, self.engine_state_callback)
+
+    def engine_state_callback(self, string_message):
+        self.state = string_message.data
+        print("Received engine state: {}".format(self.state))
+
     def get_pose(self, e, dist):
         # Calculate the position of the detected ellipse
 
@@ -63,7 +71,7 @@ class The_Ring:
         angle_to_target = np.arctan2(elipse_x, k_f)
 
         # Get the angles in the base_link relative coordinate system
-        x, y = dist*np.cos(angle_to_target), dist*np.sin(angle_to_target)
+        x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
 
         # Define a stamped message for transformation
         point_s = PointStamped()
@@ -103,6 +111,9 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
+        if not self.state == "observing":
+            return
+
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -127,7 +138,7 @@ class The_Ring:
             e1 = c[0]
             e2 = c[1]
 
-            size = (e1[1][0]+e1[1][1])/2
+            size = (e1[1][0] + e1[1][1]) / 2
             center = (e1[0][1], e1[0][0])
 
             x1 = int(center[0] - size / 2)
@@ -143,7 +154,7 @@ class The_Ring:
             y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
 
             median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
-            self.get_pose(e1, float(median)/1000.0)
+            self.get_pose(e1, float(median) / 1000.0)
 
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
@@ -163,8 +174,8 @@ class The_Ring:
         (x1, y1), (majoraxis1, minoraxis1), angle1 = e1
         (x2, y2), (majoraxis2, minoraxis2), angle2 = e2
         center_to_center_distance = np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2))
-        majoraxisdiff = abs(majoraxis1-majoraxis2)
-        minoraxisdiff = abs(minoraxis1-minoraxis2)
+        majoraxisdiff = abs(majoraxis1 - majoraxis2)
+        minoraxisdiff = abs(minoraxis1 - minoraxis2)
         if (center_to_center_distance < 5 and
                 10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
             return [(e1, e2)]
@@ -182,7 +193,6 @@ class The_Ring:
 
 
 def main(args):
-
     _ = The_Ring()
     try:
         rospy.spin()

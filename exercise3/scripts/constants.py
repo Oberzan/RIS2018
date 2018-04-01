@@ -18,3 +18,9 @@ ROTATE_SPEED = 40
 ROTATE_ANGLE = 390
 
 GOAL_RESULT_TIMEOUT = 0
+
+
+
+ROTATING = "rotating"
+DEFAULT = "default"
+OBSERVING = "observing"

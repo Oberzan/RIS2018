@@ -53,7 +53,7 @@ def nearest_goal(point, goals):
     max_dist = 999999999
     c_goal = None
     for p in goals:
-        dist = ((point.x - p.x) ** 2 + (point.y - p.y) ** 2) ** 0.5
+        dist = point_distance(point, p)
         if dist < max_dist:
             c_goal = p
             max_dist = dist
