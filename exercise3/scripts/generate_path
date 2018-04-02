@@ -75,7 +75,7 @@ class GoalGenerator:
         goal_step = rospy.get_param('~step')
 
         self.erosion = erode_image(self.img, erosion_factor)
-        self.goals_left = generate_goals(self.erosion, goal_step)
+        self.goals_left = generate_goals(self.erosion, goal_step, offset_x=7, offset_y=-2)
         self.all_goals = self.goals_left[:]
 
 
