@@ -57,8 +57,8 @@ class The_Ring:
         self.engine_state_subscriber = rospy.Subscriber("engine/status", String, self.engine_state_callback)
 
     def engine_state_callback(self, string_message):
-        self.state = string_message.data
-        print("Received engine state: {}".format(self.state))
+        self.engine_state = string_message.data
+        print("Received engine engine_state: {}".format(self.engine_state))
 
     def get_pose(self, e, dist):
         # Calculate the position of the detected ellipse
@@ -111,7 +111,7 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        if not self.state == "observing":
+        if not self.engine_state == "observing":
             return
 
         try:
