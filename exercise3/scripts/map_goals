@@ -59,7 +59,7 @@ class MapGoals():
     def transform_map_point(self, point):
         _, size_y = self.cv_map.shape
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
-                            (size_y - point.y) * self.map_resolution, 0)
+                            (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
 
         print("Transforming point [x: {} y: {} z: {}] -> [x: {} y: {} z :{}]".format(point.x, point.y, point.z,
                                                                                      transformed.x, transformed.y,
@@ -92,6 +92,7 @@ class MapGoals():
         self.cv_map = None
         self.map_transform = None
         self.map_resolution = 0
+        self.circles_detected = 0
 
         # Subscriber for map goals
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
@@ -112,6 +113,8 @@ class MapGoals():
         self.viewpoint_publisher = rospy.Publisher("/request_viewpoint", Point, queue_size=10)
         # Publisher for current state of map_goals
         self.state_publisher = rospy.Publisher("engine/status", String, queue_size=10)
+        # Speaker publisher
+        self.speaker_publisher = rospy.Publisher("speaker/say", String, queue_size=10)
 
         print("MapGoals initialized.")
 
@@ -121,6 +124,22 @@ class MapGoals():
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
+
+        say = String()
+        say.data = "Circle detected"
+        self.speaker_publisher.publish(say)
+
+        self.circles_detected += 1
+
+        if self.circles_detected == 3:
+            say.data = "Finished"
+            self.speaker_publisher.publish(say)
+        else:
+            print("Requesting for new circle")
+            self.circle_request_publisher.publish(Point())
+
+
+
 
     def cluster_point_callback(self, circle_point):
         print("Received and asking for viewpoint: {}".format(circle_point))

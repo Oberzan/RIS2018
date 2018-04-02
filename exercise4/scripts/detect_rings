@@ -81,6 +81,8 @@ class The_Ring:
         point_s.header.frame_id = "base_link"
         point_s.header.stamp = rospy.Time(0)
 
+        print(point_s.point)
+
         # Get the point in the "map" coordinate system
         point_world = self.tf_buf.transform(point_s, "map")
 
@@ -89,6 +91,7 @@ class The_Ring:
         pose.position.x = point_world.point.x
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
+
 
         print("Publishing point to cluster: \n", point_world.point)
         self.cluster_publisher.publish(point_world.point)

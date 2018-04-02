@@ -36,10 +36,11 @@ class GoalGenerator:
     def circle_goal_viewpoint_request(self, estimated_circle_center):
         print("Got request for nearest point to circle: {}".format(estimated_circle_center))
 
-        viewpoint = min(self.transformed_goals, key=lambda goal: point_distance(goal, estimated_circle_center))
 
-        print("Calculated viewpoint at: {}".format(viewpoint))
-        self.viewpoint_publisher.publish(viewpoint)
+        nearest_viewpoint = min(self.transformed_goals, key=lambda goal: point_distance(goal, estimated_circle_center))
+
+        print("Calculated viewpoint at: {}".format(nearest_viewpoint))
+        self.viewpoint_publisher.publish(nearest_viewpoint)
 
 
 

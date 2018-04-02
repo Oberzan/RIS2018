@@ -18,6 +18,7 @@ class Clusterer():
         self.markers = MarkerArray()
         self.CENTER_THRESHOLD = 0.6
         self.MIN_CENTER_DETECTIONS = 10
+        self.current_center_index = 0
 
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
@@ -30,22 +31,18 @@ class Clusterer():
 
 
     def request_callback(self, point):
-        max_by_hits = max(self.points, key=lambda x: x.n)
+        by_n = sorted(self.centers, key=lambda center: center.n)
+
+        current_circle = by_n[self.current_center_index]
+
+        self.current_center_index += 1
+
         circle_target = Point()
-        circle_target.x = max_by_hits.x
-        circle_target.y = max_by_hits.y
+        circle_target.x = current_circle.x
+        circle_target.y = current_circle.y
 
-        print("Publishing point: {}".format(max_by_hits))
+        print("Publishing point: {}".format(circle_target))
         self.circle_publisher.publish(circle_target)
-
-
-
-
-
-
-
-
-
 
 
     def publish_markers(self):
