@@ -36,33 +36,36 @@ def erode_image(img, erosion_factor):
     return cv2.erode(img, kernel, iterations=1)
 
 
-def generate_goals(img, step):
+def generate_goals(img, step, offset_x=0, offset_y=0):
     height, width = img.shape
     goals = []
     for y in range(step, height, step):
         for x in range(step, width, step):
-            if img[y][x] > 250:
-                p = Point()
-                p.x = x
-                p.y = y
 
-                if y < 40 and y > 30:
-                    p.y += 1
-                if y < 30 and x > 30 and x < 40:
-                    p.x += 2
-                if x > 30:
-                    p.x -= 2
-                if y > 80:
-                    p.y += 3
-                if y > 40 and y < 60:
-                    p.y -= 2
-                if y > 65 and x > 20 and x < 30:
-                    p.x -= 2
+
+            inner_y = y + offset_y
+            inner_x = x + offset_x
+
+            if inner_y < img.shape[0] and inner_x < img.shape[1] and img[inner_y][inner_x] > 250:
+                p = Point()
+                p.x = inner_x
+                p.y = inner_y
+
                 goals.append(p)
-    m = Point()
-    m.x = 35
-    m.y = 92
-    goals.append(m)
+
+    ## Hardcoded for competition
+    h1 = Point()
+    h1.x = 33
+    h1.y = 92
+    goals.append(h1)
+    h2 = Point()
+    h2.x = 13
+    h2.y = 98
+    goals.append(h2)
+    h3 = Point()
+    h3.x = 45
+    h3.y = 80
+    goals.append(h3)
     return goals
 
 
