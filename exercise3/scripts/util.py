@@ -45,7 +45,24 @@ def generate_goals(img, step):
                 p = Point()
                 p.x = x
                 p.y = y
+
+                if y < 40 and y > 30:
+                    p.y += 1
+                if y < 30 and x > 30 and x < 40:
+                    p.x += 2
+                if x > 30:
+                    p.x -= 2
+                if y > 80:
+                    p.y += 3
+                if y > 40 and y < 60:
+                    p.y -= 2
+                if y > 65 and x > 20 and x < 30:
+                    p.x -= 2
                 goals.append(p)
+    m = Point()
+    m.x = 35
+    m.y = 92
+    goals.append(m)
     return goals
 
 
