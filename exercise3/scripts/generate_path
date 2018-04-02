@@ -23,7 +23,7 @@ class GoalGenerator:
 
         new_goal, dist = nearest_goal(data, self.goals_left)
         self.goals_left.remove(new_goal)
-        draw_with_goals(self.img, self.goals_left)
+        #draw_with_goals(self.img, self.goals_left)
 
 
         print("Publishsing point:\n" + str(new_goal) +

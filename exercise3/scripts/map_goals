@@ -94,6 +94,8 @@ class MapGoals():
         self.map_resolution = 0
         self.circles_detected = 0
 
+         # Publisher for requesting new map goal
+        self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
         # Subscriber for map goals
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
         # Subscriber for map
@@ -105,9 +107,7 @@ class MapGoals():
 
         # Publisher for requesting a circle from cluster
         self.circle_request_publisher = rospy.Publisher("cluster/request", Point, queue_size=10)
-        # Publisher for requesting new map goal
-        self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
-        # Velocity publisher
+       # Velocity publisher
         self.velocity_publisher = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
         # Publisher for requesting nearest point to a circle
         self.viewpoint_publisher = rospy.Publisher("/request_viewpoint", Point, queue_size=10)

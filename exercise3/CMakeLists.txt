@@ -16,8 +16,8 @@ find_package( OpenCV REQUIRED )
 
 catkin_package()
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+#include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 # add_executable(map_goals_cpp src/map_goals_cpp.cpp)
-target_link_libraries(map_goals_cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#target_link_libraries(map_goals_cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 catkin_install_python(PROGRAMS scripts/map_goals DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
