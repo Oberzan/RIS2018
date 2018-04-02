@@ -59,7 +59,7 @@ class MapGoals():
     def transform_map_point(self, point):
         _, size_y = self.cv_map.shape
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
-                            (size_y - point.y) * self.map_resolution + self.map_transform.position.y, 0)
+                            (size_y - point.y) * self.map_resolution + (self.map_transform.position.y * self.map_resolution * 2), 0)
 
         print("Transforming point [x: {} y: {} z: {}] -> [x: {} y: {} z :{}]".format(point.x, point.y, point.z,
                                                                                      transformed.x, transformed.y,
@@ -67,9 +67,10 @@ class MapGoals():
         return transformed
 
     def goal_callback(self, point):
-        if not point:
+        if point.z == -1337:
             print("All points visited! Requesting circle goal.")
-            self.circle_request_publisher.publish(None)
+            self.circle_request_publisher.publish(Point())
+            return
 
         print("Goal callback")
         transformed = self.transform_map_point(point)
@@ -103,7 +104,7 @@ class MapGoals():
         # Subscriber for cluster circle location
         self.circle_target_subscriber = rospy.Subscriber("cluster/goal", Point, self.cluster_point_callback)
         # Subscriber for nearest point to circle (viewpoint)
-        self.viewpoint_subscriber = rospy.Subscriber("/request_response", Point, self.viewpoint_callback)
+        self.viewpoint_subscriber = rospy.Subscriber("/response_viewpoint", Point, self.viewpoint_callback)
 
         # Publisher for requesting a circle from cluster
         self.circle_request_publisher = rospy.Publisher("cluster/request", Point, queue_size=10)
@@ -128,11 +129,12 @@ class MapGoals():
         say = String()
         say.data = "Circle detected"
         self.speaker_publisher.publish(say)
+        rospy.sleep(3)
 
         self.circles_detected += 1
 
         if self.circles_detected == 3:
-            say.data = "Finished"
+            say.data = "Die puny humans."
             self.speaker_publisher.publish(say)
         else:
             print("Requesting for new circle")
