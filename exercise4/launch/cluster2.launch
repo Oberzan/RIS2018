@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="exercise4" type="cluster2" name="cluster" output="screen">
+    <param name="num_clusters" value="3"/>
+  </node>
+
+</launch>
