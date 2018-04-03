@@ -6,6 +6,7 @@ import rospy
 from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 from geometry_msgs.msg import Point, Quaternion
 from move_base_msgs.msg import MoveBaseGoal
+from math import atan2
 
 
 def flip(m, axis):
@@ -18,6 +19,11 @@ def flip(m, axis):
         raise ValueError("axis=%i is invalid for the %i-dimensional input array"
                          % (axis, m.ndim))
     return m[tuple(indexer)]
+
+def angle_to_goal(viewpoint, target):
+    angle = atan2(target.y - viewpoint.y, target.x - viewpoint.x)
+    print("Angle to goal: {}".format(angle))
+    return angle
 
 def normalize_value(value, max=1, min=0):
     return (value - min) / (max - min)
@@ -65,8 +71,9 @@ def generate_goals(img, step, offset_x=0, offset_y=0):
     goals = []
     for y in range(step, height, step):
         for x in range(step, width, step):
-
-
+            if len(goals) >= 2:
+                return goals
+            
             inner_y = y + offset_y
             inner_x = x + offset_x
 

@@ -11,11 +11,13 @@ from nav_msgs.msg import OccupancyGrid
 import numpy as np
 from std_msgs.msg import String
 from geometry_msgs.msg import Point, Twist
+from nav_msgs.msg import Odometry
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
 from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT, ROTATING, DEFAULT
 from moves import rotate
-from util import point_2_base_goal, flip, orientation_vector, approached_target
+from util import point_2_base_goal, flip, orientation_vector, approached_target, angle_to_goal
+from tf.transformations import euler_from_quaternion
 
 
 class MapGoals():
@@ -94,6 +96,7 @@ class MapGoals():
         self.map_transform = None
         self.map_resolution = 0
         self.circles_detected = 0
+        self.circle_rotating_rate = rospy.Rate(4)
 
          # Publisher for requesting new map goal
         self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
@@ -105,6 +108,8 @@ class MapGoals():
         self.circle_target_subscriber = rospy.Subscriber("cluster/goal", Point, self.cluster_point_callback)
         # Subscriber for nearest point to circle (viewpoint)
         self.viewpoint_subscriber = rospy.Subscriber("/response_viewpoint", Point, self.viewpoint_callback)
+        # Odom subscriber
+        self.sub = rospy.Subscriber("/odometry/filtered", Odometry, self.odom_callback)
 
         # Publisher for requesting a circle from cluster
         self.circle_request_publisher = rospy.Publisher("cluster/request", Point, queue_size=10)
@@ -119,6 +124,30 @@ class MapGoals():
 
         print("MapGoals initialized.")
 
+
+    def rotate_to_goal(self, viewpoint, goal):
+        print("Rotating to goal {}".format(goal))
+
+        angle = angle_to_goal(viewpoint, goal)
+
+        speed = Twist()
+        while abs(angle - self.theta) > 0.1:
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
+            self.velocity_publisher.publish(speed)
+            self.circle_rotating_rate.sleep()
+
+        speed.angular.z = 0.0
+        self.velocity_publisher.publish(speed)
+
+        print("Orientated to goal!.")
+
+
+    def odom_callback(self, odometry):
+        rot_q = odometry.pose.pose.orientation
+        (roll, pitch, jaw) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
+        print("self.theta={}".format(jaw))
+        self.theta = jaw
 
     def approach(self, viewpoint, target, orientation):
         print("Approaching...")
