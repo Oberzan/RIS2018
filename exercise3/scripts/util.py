@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import rospy
 from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Quaternion
 from move_base_msgs.msg import MoveBaseGoal
 
 
@@ -20,10 +20,26 @@ def flip(m, axis):
     return m[tuple(indexer)]
 
 
-def point_2_base_goal(point, frame_id="map"):
+def orientation_vector(viewpoint, target):
+    orientation = Quaternion()
+    orientation.x = target.x - viewpoint.x
+    orientation.y = target.y - viewpoint.y
+    orientation.w = 1
+    return orientation
+
+def approached_target(viewpoint, orientation, approach_factor=0.7):
+    p = Point()
+    p.x = viewpoint.x + (orientation.x * approach_factor)
+    p.y = viewpoint.y + (orientation * approach_factor)
+    return p
+
+def point_2_base_goal(point, frame_id="map", orientation=None):
     goal = PoseStamped()
     goal.header.frame_id = frame_id
     goal.pose.orientation.w = 1
+    if orientation:
+        goal.pose.orientation = orientation
+
     goal.pose.position = point
     goal.header.stamp = rospy.Time(0)
     move_base_goal = MoveBaseGoal()
