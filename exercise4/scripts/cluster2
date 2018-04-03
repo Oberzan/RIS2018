@@ -38,7 +38,8 @@ class Clusterer():
 
     def publish_markers(self):
         if hasattr(self.kmeans, "cluster_centers_"):
-            markers = [self.point_2_marker(p, marker_id) for marker_id, p in enumerate(self.kmeans.cluster_centers_)]
+            markers = [self.point_2_marker(cluster_center, marker_id) for marker_id, cluster_center in
+                       enumerate(self.kmeans.cluster_centers_)]
             print("Publishing {} markers.".format(len(markers)))
             self.markers_pub.publish(markers)
 
