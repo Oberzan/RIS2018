@@ -19,12 +19,20 @@ def flip(m, axis):
                          % (axis, m.ndim))
     return m[tuple(indexer)]
 
+def normalize_value(value, max=1, min=0):
+    return (value - min) / (max - min)
+
+def normalize(data, max=1, min=0):
+    data.x = normalize_value(data.x, max, min)
+    data.y = normalize_value(data.y, max, min)
+    data.z = normalize_value(data.z, max, min)
 
 def orientation_vector(viewpoint, target):
     orientation = Quaternion()
     orientation.x = target.x - viewpoint.x
     orientation.y = target.y - viewpoint.y
     orientation.w = 1
+    normalize(orientation)
     return orientation
 
 def approached_target(viewpoint, orientation, approach_factor=0.7):
