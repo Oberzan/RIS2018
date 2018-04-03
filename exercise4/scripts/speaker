@@ -8,7 +8,7 @@ from sound_play.libsoundplay import SoundClient
 class Speaker():
 
     def say_callback(self, sentence):
-        s = str(sentence)
+        s = str(sentence.data)
         self.soundhandle.say(s)
         print("Saying {}".format(s))
 

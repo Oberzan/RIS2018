@@ -18,7 +18,10 @@ class GoalGenerator:
         print("Got goal request!")
         if len(self.goals_left) == 0:
             print("All points visited!")
-            self.pub.publish(None)
+            p = Point()
+            p.z = -1337
+            self.pub.publish(p)
+            return
 
 
         new_goal, dist = nearest_goal(data, self.goals_left)
@@ -26,7 +29,7 @@ class GoalGenerator:
         #draw_with_goals(self.img, self.goals_left)
 
 
-        print("Publishsing point:\n" + str(new_goal) +
+        print("Publishing point:\n" + str(new_goal) +
               "\n at distance: " + str(dist))
         print("Remaining points: " + str(len(self.goals_left)) + "\n")
 
