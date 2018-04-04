@@ -21,7 +21,7 @@ def flip(m, axis):
     return m[tuple(indexer)]
 
 def angle_to_goal(viewpoint, target):
-    angle = atan2(target.y - viewpoint.y, target.x - viewpoint.x)
+    angle = atan2(-(target.y - viewpoint.y), -(target.x - viewpoint.x))
     print("Angle to goal: {}".format(angle))
     return angle
 
