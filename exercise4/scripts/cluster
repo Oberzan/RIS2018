@@ -31,7 +31,7 @@ class Clusterer():
 
 
     def request_callback(self, point):
-        by_n = sorted(self.centers, key=lambda center: center.n)
+        by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
 
         print(by_n)
         current_circle = by_n[self.current_center_index]
