@@ -126,10 +126,11 @@ class MapGoals():
 
 
     def rotate_to_goal(self, viewpoint, goal):
+        print("Rotating from viewpoint {}".format(viewpoint))
         print("Rotating to goal {}".format(goal))
 
         angle = angle_to_goal(viewpoint, goal)
-        print(angle, self.theta)
+
 
         speed = Twist()
         while abs(angle - self.theta) > 0.12:
@@ -137,6 +138,7 @@ class MapGoals():
             speed.angular.z = 0.25
             self.velocity_publisher.publish(speed)
             self.circle_rotating_rate.sleep()
+            print(angle, self.theta)
 
         speed.angular.z = 0.0
         self.velocity_publisher.publish(speed)
