@@ -125,7 +125,7 @@ class The_Ring:
             print(e)
         self.dims = cv_image.shape
 
-        self.cropImage(cv_image, 150, 320)
+        self.cropImage(cv_image, 140, 320)
 
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
