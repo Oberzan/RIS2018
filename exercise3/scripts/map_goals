@@ -129,6 +129,7 @@ class MapGoals():
         print("Rotating to goal {}".format(goal))
 
         angle = angle_to_goal(viewpoint, goal)
+        print(angle, self.theta)
 
         speed = Twist()
         while abs(angle - self.theta) > 0.12:
@@ -146,7 +147,7 @@ class MapGoals():
     def odom_callback(self, odometry):
         rot_q = odometry.pose.pose.orientation
         (roll, pitch, jaw) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
-        print("self.theta={}".format(jaw))
+        # print("self.theta={}".format(jaw))
         self.theta = jaw
 
     def approach(self, viewpoint, target, orientation):
@@ -160,8 +161,8 @@ class MapGoals():
 
 
     def viewpoint_callback(self, viewpoint):
-        orientation = orientation_vector(viewpoint, self.current_circle_target)
-        move_base_goal = point_2_base_goal(viewpoint, orientation=orientation)
+        #orientation = orientation_vector(viewpoint, self.current_circle_target)
+        move_base_goal = point_2_base_goal(viewpoint)
 
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
