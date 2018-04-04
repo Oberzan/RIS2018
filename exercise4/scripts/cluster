@@ -70,7 +70,7 @@ class Clusterer():
         marker.lifetime = rospy.Duration.from_sec(30)
         marker.id = ix
         marker.scale = Vector3(0.1, 0.1, 0.1)
-        marker.color = self.colors[ix]
+        marker.color = self.colors[ix - 1]
         return marker
 
     def point_callback(self, p):
