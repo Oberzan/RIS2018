@@ -90,19 +90,10 @@ class Clusterer():
                 ix = center_ix
 
         if closest_center:
-            n = closest_center.n
-
-            print("Updating center")
             new_center = closest_center.move_center(p)
             self.centers[ix] = new_center
-
-            old_marker = self.markers.markers[ix]
-            old_marker.pose.position.x = new_center.x
-            old_marker.pose.position.y = new_center.y
-            self.markers.markers[ix] = old_marker
         else:
             self.centers.append(ClusterPoint(p.x, p.y, 1))
-            self.markers.markers.append(self.point_2_marker(p))
             print("Adding new center")
 
         self.publish_markers()
