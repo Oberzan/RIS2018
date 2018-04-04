@@ -152,7 +152,7 @@ class MapGoals():
     def approach(self, viewpoint, target, orientation):
         print("Approaching...")
         closer_viewpoint = approached_target(viewpoint, orientation)
-        move_base_goal = point_2_base_goal(closer_viewpoint, orientation)
+        move_base_goal = point_2_base_goal(closer_viewpoint, orientation=orientation)
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
         print("Aproached circle!")
@@ -161,7 +161,7 @@ class MapGoals():
 
     def viewpoint_callback(self, viewpoint):
         orientation = orientation_vector(viewpoint, self.current_circle_target)
-        move_base_goal = point_2_base_goal(viewpoint, orientation)
+        move_base_goal = point_2_base_goal(viewpoint, orientation=orientation)
 
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
