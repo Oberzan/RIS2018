@@ -131,7 +131,7 @@ class MapGoals():
         angle = angle_to_goal(viewpoint, goal)
 
         speed = Twist()
-        while abs(angle - self.theta) > 0.05:
+        while abs(angle - self.theta) > 0.12:
             speed.linear.x = 0.0
             speed.angular.z = 0.25
             self.velocity_publisher.publish(speed)
