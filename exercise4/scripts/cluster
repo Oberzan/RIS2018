@@ -20,6 +20,7 @@ class Clusterer():
         self.MIN_CENTER_DETECTIONS = 10
         self.current_center_index = 0
 
+        self.colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
         self.markers_pub = rospy.Publisher(
@@ -48,10 +49,12 @@ class Clusterer():
 
 
     def publish_markers(self):
-        print("Publishing {} markers.".format(len(self.centers)))
-        self.markers_pub.publish(self.markers)
+        by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
+        markers = [self.point_2_marker(p, ix) for (ix, p) in enumerate(by_n[:3])]
+        print("Publishing {} markers.".format(len(markers)))
+        self.markers_pub.publish(markers)
 
-    def point_2_marker(self, point_world):
+    def point_2_marker(self, point_world, ix):
 
         pose = Pose()
         pose.position.x = point_world.x
@@ -65,9 +68,9 @@ class Clusterer():
         marker.action = Marker.ADD
         marker.frame_locked = False
         marker.lifetime = rospy.Duration.from_sec(30)
-        marker.id = len(self.markers.markers)
+        marker.id = ix
         marker.scale = Vector3(0.1, 0.1, 0.1)
-        marker.color = ColorRGBA(1, 0, 0, 1)
+        marker.color = self.colors[ix]
         return marker
 
     def point_callback(self, p):
