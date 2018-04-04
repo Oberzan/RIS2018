@@ -88,8 +88,6 @@ class Clusterer():
 
         if closest_center:
             n = closest_center.n
-            if n >= self.MIN_CENTER_DETECTIONS:
-                return
 
             print("Updating center")
             new_center = closest_center.move_center(p)
