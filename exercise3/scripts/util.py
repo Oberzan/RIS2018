@@ -6,7 +6,7 @@ import rospy
 from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 from geometry_msgs.msg import Point, Quaternion
 from move_base_msgs.msg import MoveBaseGoal
-from math import atan2
+from math import atan2, pi
 
 
 def flip(m, axis):
@@ -22,8 +22,13 @@ def flip(m, axis):
 
 def angle_to_goal(viewpoint, target):
     angle = atan2(-(target.y - viewpoint.y), -(target.x - viewpoint.x))
-    print("Angle to goal: {}".format(angle))
-    return angle
+    shifted = angle - 1.57079633
+
+    if shifted < -pi:
+        shifted = abs(shifted) % pi
+
+    print("Angle to goal: {}".format(shifted))
+    return shifted
 
 def normalize_value(value, max=1, min=0):
     return (value - min) / (max - min)
