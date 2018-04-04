@@ -54,7 +54,7 @@ class MapGoals():
 
         print("Map successfully saved.")
 
-        p = Point(5.0, 2.0, 0.0)
+        p = Point(100.0, 15.0, 0.0)
         print("Requesting initial goal with: [x: {} y: {} y: {}]", p.x, p.y, p.z)
         self.goal_request_pub.publish(p)
 
