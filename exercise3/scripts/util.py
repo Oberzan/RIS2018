@@ -73,7 +73,7 @@ def generate_goals(img, step, offset_x=0, offset_y=0):
         for x in range(step, width, step):
             if len(goals) >= 2:
                 return goals
-            
+
             inner_y = y + offset_y
             inner_x = x + offset_x
 

@@ -131,9 +131,9 @@ class MapGoals():
         angle = angle_to_goal(viewpoint, goal)
 
         speed = Twist()
-        while abs(angle - self.theta) > 0.1:
+        while abs(angle - self.theta) > 0.05:
             speed.linear.x = 0.0
-            speed.angular.z = 0.3
+            speed.angular.z = 0.25
             self.velocity_publisher.publish(speed)
             self.circle_rotating_rate.sleep()
 
@@ -168,7 +168,9 @@ class MapGoals():
         print("Moved to viewpoint!")
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-        self.approach(viewpoint, self.current_circle_target, orientation)
+        self.rotate_to_goal(viewpoint, self.current_circle_target)
+
+        ## self.approach(viewpoint, self.current_circle_target, orientation)
 
         say = String()
         say.data = "Circle detected"
