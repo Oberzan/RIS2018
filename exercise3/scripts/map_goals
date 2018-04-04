@@ -109,7 +109,7 @@ class MapGoals():
         # Subscriber for nearest point to circle (viewpoint)
         self.viewpoint_subscriber = rospy.Subscriber("/response_viewpoint", Point, self.viewpoint_callback)
         # Odom subscriber
-        self.sub = rospy.Subscriber("/odometry/filtered", Odometry, self.odom_callback)
+        self.sub = rospy.Subscriber("/odom", Odometry, self.odom_callback)
 
         # Publisher for requesting a circle from cluster
         self.circle_request_publisher = rospy.Publisher("cluster/request", Point, queue_size=10)
