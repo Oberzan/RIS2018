@@ -125,7 +125,7 @@ class The_Ring:
             print(e)
         self.dims = cv_image.shape
 
-        self.cropImage(cv_image, 140, 320)
+        self.cropImage(cv_image, 120, 320)
 
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
@@ -172,7 +172,7 @@ class The_Ring:
         candidates = []
         for n in range(len(elps)):
             for m in range(n + 1, len(elps)):
-                candidates += self.isCircle(elps[n], elps[m])
+                candidates += self.isCircle2(elps[n], elps[m])
         return candidates
 
     def isCircle(self, e1, e2):
@@ -182,7 +182,25 @@ class The_Ring:
         majoraxisdiff = abs(majoraxis1 - majoraxis2)
         minoraxisdiff = abs(minoraxis1 - minoraxis2)
         if (center_to_center_distance < 5 and
-                10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
+            10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
+            return [(e1, e2)]
+        return []
+
+    def isCircle2(self, e1, e2):
+        (x1, y1), (minoraxis1, majoraxis1), angle1 = e1
+        (x2, y2), (minoraxis2, majoraxis2), angle2 = e2
+        if (0.22 < abs(majoraxis1/majoraxis2-1) < 0.32 and
+            0.22 < abs(minoraxis1/minoraxis2-1) < 0.32 and
+            abs(minoraxis1/majoraxis2-1) < 0.65 and
+            abs(majoraxis1/minoraxis2-1) < 0.35 and
+            20 < minoraxis1 < 85 and
+            np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
+            print(abs(majoraxis1/majoraxis2-1))
+            print(abs(minoraxis1/minoraxis2-1))
+            print(abs(minoraxis1/majoraxis2-1))
+            print(abs(majoraxis1/minoraxis2-1))
+            print(minoraxis1)
+            print()
             return [(e1, e2)]
         return []
 
