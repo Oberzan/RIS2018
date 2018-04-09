@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(pcl_demos)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ## Find system dependencies
 find_package(Boost REQUIRED COMPONENTS system filesystem thread)
 find_package(Eigen3 REQUIRED)
