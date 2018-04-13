@@ -14,7 +14,7 @@ from geometry_msgs.msg import Point, Twist
 from nav_msgs.msg import Odometry
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
-from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT, ROTATING, DEFAULT, MOVING, CIRCLE_APPROACHED
+from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT, ROTATING, DEFAULT, MOVING, CIRCLE_APPROACHING, CIRCLE_APPROACHED
 from moves import rotate
 from util import point_2_base_goal, flip, orientation_vector, approached_target, angle_to_goal
 from tf.transformations import euler_from_quaternion
@@ -87,7 +87,7 @@ class MapGoals():
 
 
         while self.circle_to_visit_jobs:
-            if self.state != CIRCLE_APPROACHED:
+            if self.state != CIRCLE_APPROACHING or self.state != CIRCLE_APPROACHED:
                 rospy.sleep(0.5)
                 continue
 
@@ -188,12 +188,12 @@ class MapGoals():
 
         ## self.approach(viewpoint, self.current_circle_target, orientation)
 
+        self.state = CIRCLE_APPROACHED
+
         say = String()
         say.data = "Circle detected"
         self.speaker_publisher.publish(say)
         rospy.sleep(3)
-
-        self.state = CIRCLE_APPROACHED
 
         self.circles_detected += 1
 
@@ -207,8 +207,8 @@ class MapGoals():
     def cluster_point_callback(self, circle_point):
         self.current_circle_target = circle_point
         print("Received and asking for viewpoint: {}".format(circle_point))
-
         self.circle_to_visit_jobs.append(circle_point)
+        self.state = CIRCLE_APPROACHING
 
         ## self.viewpoint_publisher.publish(circle_point)
 
