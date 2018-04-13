@@ -19,6 +19,7 @@ def rotate(velocity_publisher, speed, angle, state_publisher, step_angle=45, clo
 
     # Send OBSERVING state and sleeps for sleep_duration
     string_message.data = OBSERVING
+    state_publisher.publish(string_message)
     print("Publishing state: {}".format(string_message.data))
 
     while current_angle < relative_angle:

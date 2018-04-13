@@ -148,7 +148,7 @@ class MapGoals():
         speed = Twist()
         while abs(angle - self.theta) > 0.12:
             speed.linear.x = 0.0
-            speed.angular.z = 0.25
+            speed.angular.z = 1
             self.velocity_publisher.publish(speed)
             self.circle_rotating_rate.sleep()
             print(angle, self.theta)
