@@ -10,7 +10,7 @@ import rospy
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
 from std_msgs.msg import String
-from geometry_msgs.msg import Point, Twist
+from geometry_msgs.msg import Point, Twist, PoseArray, Pose
 from nav_msgs.msg import Odometry
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
@@ -57,6 +57,7 @@ class MapGoals():
         p = Point(100.0, 15.0, 0.0)
         print("Requesting initial goal with: [x: {} y: {} y: {}]", p.x, p.y, p.z)
         self.goal_request_pub.publish(p)
+        self.map_initialized_publisher.publish(p)
 
     def transform_map_point(self, point):
         _, size_y = self.cv_map.shape
@@ -134,8 +135,33 @@ class MapGoals():
         self.state_publisher = rospy.Publisher("engine/status", String, queue_size=10)
         # Speaker publisher
         self.speaker_publisher = rospy.Publisher("speaker/say", String, queue_size=10)
+        # Map initialized publisher
+        self.map_initialized_publisher = rospy.Publisher("/map_initialized", Point, queue_size=10)
+        # Transform subscriber
+        self.map_transforms_subscriber = rospy.Subscriber("/request_transforms", PoseArray, self.map_transforms_callback)
+        # Transform publisher
+        self.map_transform_publisher = rospy.Publisher("/response_transforms", PoseArray, queue_size=10)
 
         print("MapGoals initialized.")
+
+
+    def map_transforms_callback(self, pose_array):
+
+        transformed_poses = PoseArray()
+        for pose in pose_array.poses:
+            transformed_pose = Pose()
+            transformed_pose.position = self.transform_map_point(pose.position)
+
+            transformed_poses.poses.append(transformed_poses)
+
+        print("PUBLISHING TRANSFORMED POINTS!")
+        self.map_transform_publisher.publish(transformed_poses)
+
+
+
+
+
+
 
 
     def rotate_to_goal(self, viewpoint, goal):
