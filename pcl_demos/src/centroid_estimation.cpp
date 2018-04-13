@@ -70,30 +70,25 @@
 #include <boost/filesystem.hpp>
 
 ros::Publisher pub;
-pcl::PointCloud<pcl::PointXYZ>::Ptr cluster (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZ>::Ptr cluster(new pcl::PointCloud<pcl::PointXYZ>);
 
-
-
-int
-main (int argc, char** argv)
+int main(int argc, char **argv)
 {
   // Initialize ROS
-  ros::init (argc, argv, "obstacle_projection");
+  ros::init(argc, argv, "obstacle_projection");
   ros::NodeHandle nh;
 
-  pub = nh.advertise<pcl::PCLPointCloud2> ("cloud_demean", 1);
-    // Load object and scene
-  pcl::console::print_highlight ("Loading point clouds...\n");
+  pub = nh.advertise<pcl::PCLPointCloud2>("cloud_demean", 1);
+  // Load object and scene
+  pcl::console::print_highlight("Loading point clouds...\n");
 
-  
   pcl::PCDReader reader;
-  reader.read ("cloud_cluster_2.pcd", *cluster);
+  reader.read("cloud_cluster_2.pcd", *cluster);
 
- 
- Eigen::Vector4f centroid;
- pcl::compute3DCentroid (*cluster, centroid);
- cout << centroid[0] << " " <<  centroid[1] << " " <<   centroid[2] << " " <<   centroid[3] << " \n";
- /*pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_demean (new pcl::PointCloud<pcl::PointXYZ>);
+  Eigen::Vector4f centroid;
+  pcl::compute3DCentroid(*cluster, centroid);
+  cout << centroid[0] << " " << centroid[1] << " " << centroid[2] << " " << centroid[3] << " \n";
+  /*pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_demean (new pcl::PointCloud<pcl::PointXYZ>);
  pcl::demeanPointCloud<pcl::PointXYZ> (cloud_xyz, centroid, *cloud_xyz_demean);
  
  pcl::console::print_highlight ("centroid\n", centroid);
@@ -109,4 +104,3 @@ main (int argc, char** argv)
   //ros::spin ();
   return (0);
 }
-

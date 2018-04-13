@@ -17,6 +17,8 @@
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "geometry_msgs/PointStamped.h"
+#include <pcl/filters/voxel_grid.h>
+
 
 ros::Publisher pubx;
 ros::Publisher puby;
@@ -34,6 +36,8 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   time_rec = ros::Time::now();
 
   pcl::PassThrough<PointT> pass;
+  pcl::VoxelGrid<pcl::PCLPointCloud2> voxel_filter;
+  pcl::PCLPointCloud2 voxel_filtered;
   pcl::NormalEstimation<PointT, pcl::Normal> ne;
   pcl::SACSegmentationFromNormals<PointT, pcl::Normal> seg;
   pcl::PCDWriter writer;
@@ -51,8 +55,12 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   pcl::ModelCoefficients::Ptr coefficients_plane(new pcl::ModelCoefficients), coefficients_cylinder(new pcl::ModelCoefficients);
   pcl::PointIndices::Ptr inliers_plane(new pcl::PointIndices), inliers_cylinder(new pcl::PointIndices);
 
+  voxel_filter.setInputCloud(cloud_blob);
+  voxel_filter.setLeafSize(0.1, 0.1, 0.1);
+  voxel_filter.filter(voxel_filtered);
+
   // Read in the cloud data
-  pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
+  pcl::fromPCLPointCloud2(voxel_filtered, *cloud);
   std::cerr << "PointCloud has: " << cloud->points.size() << " data points." << std::endl;
 
   // Build a passthrough filter to remove spurious NaNs
