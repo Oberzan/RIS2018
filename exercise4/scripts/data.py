@@ -16,4 +16,4 @@ class ClusterPoint():
     def move_center(self, p):
         new_x = (self.n * self.x + p.x) / (self.n + 1)
         new_y = (self.n * self.y + p.y) / (self.n + 1)
-        return ClusterPoint(new_x, new_y, self.n + 1, p.is_visited)
+        return ClusterPoint(new_x, new_y, self.n + 1, self.is_visited)
