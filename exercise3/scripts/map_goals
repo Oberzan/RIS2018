@@ -89,19 +89,14 @@ class MapGoals():
 
 
         while self.circle_to_visit_jobs:
-            if self.state != CIRCLE_APPROACHING or self.state != CIRCLE_APPROACHED:
-                rospy.sleep(0.5)
-                continue
-
-            self.state = DEFAULT
             self.viewpoint_publisher.publish(self.circle_to_visit_jobs[0])
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
+            try:
+                _ = rospy.wait_for_message("speaker/say", String)
+            except Exception as e:
+                print(e)
 
-        while not self.state == CIRCLE_APPROACHED and self.state != DEFAULT:
-            rospy.sleep(0.5)
-            continue
-
-        print("Requesting new goal")
+        print("Requesting new goal with state: {}".format(self.state))
         self.goal_request_pub.publish(point)
 
     def __init__(self):
