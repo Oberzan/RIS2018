@@ -185,9 +185,6 @@ class MapGoals():
         if self.circles_detected == 3:
             say.data = "Die puny humans."
             self.speaker_publisher.publish(say)
-        else:
-            print("Requesting for new circle")
-            self.circle_request_publisher.publish(Point())
 
 
 
