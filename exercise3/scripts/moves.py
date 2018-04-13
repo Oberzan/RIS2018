@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist
 from constants import ROTATING, DEFAULT, OBSERVING
 
 
-def rotate(velocity_publisher, speed, angle, state_publisher, step_angle=45, clockwise=True, sleep_duration=2):
+def rotate(velocity_publisher, speed, angle, state_publisher, step_angle=45, clockwise=True, sleep_duration=0.1):
     print("Started rotating")
     # Converting from angles to radians
     relative_angle = angle * 2 * math.pi / 360
@@ -17,19 +17,13 @@ def rotate(velocity_publisher, speed, angle, state_publisher, step_angle=45, clo
     print("Angle completed in {} steps.".format(num_stops))
     string_message = String()
 
-    while current_angle < relative_angle:
-        # Send ROTATING state
-        string_message.data = ROTATING
-        state_publisher.publish(string_message)
-        print("Publishing state: {}".format(string_message.data))
+    # Send OBSERVING state and sleeps for sleep_duration
+    string_message.data = OBSERVING
+    print("Publishing state: {}".format(string_message.data))
 
+    while current_angle < relative_angle:
         # Rotate for step_angle
         current_angle += rotate_inner(velocity_publisher, speed, step_angle, clockwise)
-
-        # Send OBSERVING state and sleeps for sleep_duration
-        string_message.data = OBSERVING
-        print("Publishing state: {}".format(string_message.data))
-        state_publisher.publish(string_message)
         rospy.sleep(sleep_duration)
 
     # Send DEFAULT state
