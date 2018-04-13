@@ -102,10 +102,10 @@ class GoalGenerator:
 
         self.transformed_goals = []
         self.transform_publisher = rospy.Publisher("/request_transforms", PoseArray, queue_size=100)
-        self.transform_subscriber = rospy.Publisher("/response_transforms", PoseArray, self.transforms_callback)
+        self.transform_subscriber = rospy.Subscriber("/response_transforms", PoseArray, self.transforms_callback)
 
 
-        self.map_initialized_subscriber = rospy.Subscriber("/map_initialized", Point, self.map_initialized_callback())
+        self.map_initialized_subscriber = rospy.Subscriber("/map_initialized", Point, self.map_initialized_callback)
 
 
 

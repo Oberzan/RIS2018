@@ -94,11 +94,13 @@ class MapGoals():
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
             try:
                 _ = rospy.wait_for_message("speaker/say", String)
+                rospy.sleep(3)
             except Exception as e:
                 print(e)
 
-        print("Requesting new goal with state: {}".format(self.state))
-        self.goal_request_pub.publish(point)
+        if self.circles_detected < 3:
+            print("Requesting new goal with state: {}".format(self.state))
+            self.goal_request_pub.publish(point)
 
     def __init__(self):
         rospy.init_node('map_goals')
@@ -112,7 +114,12 @@ class MapGoals():
         self.circle_to_visit_jobs = []
         self.state = DEFAULT
 
+        self.map_initialized_publisher = rospy.Publisher("/map_initialized", Point, queue_size=10)
          # Publisher for requesting new map goal
+         # Transform subscriber
+        self.map_transforms_subscriber = rospy.Subscriber("/request_transforms", PoseArray, self.map_transforms_callback)
+        # Transform publisher
+        self.map_transform_publisher = rospy.Publisher("/response_transforms", PoseArray, queue_size=10)
         self.goal_request_pub = rospy.Publisher("goal/request", Point, queue_size=10)
         # Subscriber for map goals
         self.goal_response_sub = rospy.Subscriber("goal/response", Point, self.goal_callback)
@@ -136,23 +143,21 @@ class MapGoals():
         # Speaker publisher
         self.speaker_publisher = rospy.Publisher("speaker/say", String, queue_size=10)
         # Map initialized publisher
-        self.map_initialized_publisher = rospy.Publisher("/map_initialized", Point, queue_size=10)
-        # Transform subscriber
-        self.map_transforms_subscriber = rospy.Subscriber("/request_transforms", PoseArray, self.map_transforms_callback)
-        # Transform publisher
-        self.map_transform_publisher = rospy.Publisher("/response_transforms", PoseArray, queue_size=10)
+        
+
 
         print("MapGoals initialized.")
 
 
     def map_transforms_callback(self, pose_array):
+        print("Map transforms callbask")
 
         transformed_poses = PoseArray()
         for pose in pose_array.poses:
             transformed_pose = Pose()
             transformed_pose.position = self.transform_map_point(pose.position)
 
-            transformed_poses.poses.append(transformed_poses)
+            transformed_poses.poses.append(transformed_pose)
 
         print("PUBLISHING TRANSFORMED POINTS!")
         self.map_transform_publisher.publish(transformed_poses)
