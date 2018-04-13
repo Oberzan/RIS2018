@@ -107,7 +107,7 @@ class MapGoals():
         self.map_transform = None
         self.map_resolution = 0
         self.circles_detected = 0
-        self.circle_rotating_rate = rospy.Rate(4)
+        self.circle_rotating_rate = rospy.Rate(10)
         self.circle_to_visit_jobs = []
         self.state = DEFAULT
 
@@ -146,7 +146,7 @@ class MapGoals():
 
 
         speed = Twist()
-        while abs(angle - self.theta) > 0.12:
+        while abs(angle - self.theta) > 0.1:
             speed.linear.x = 0.0
             speed.angular.z = 1
             self.velocity_publisher.publish(speed)
