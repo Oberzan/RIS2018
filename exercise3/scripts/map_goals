@@ -83,7 +83,9 @@ class MapGoals():
         print("Action result: " + ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
         if ACTION_CLIENT_STATUSES[self.action_client.get_state()] == 'SUCCEEDED':
+            print("ENTERING_ROTATE")
             rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, self.state_publisher)
+            print("EXITING_ROTATE")
 
 
         while self.circle_to_visit_jobs:
@@ -95,6 +97,9 @@ class MapGoals():
             self.viewpoint_publisher.publish(self.circle_to_visit_jobs[0])
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
 
+        while not self.state == CIRCLE_APPROACHED:
+            rospy.sleep(0.5)
+            continue
 
         print("Requesting new goal")
         self.goal_request_pub.publish(point)
