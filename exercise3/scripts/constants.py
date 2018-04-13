@@ -24,3 +24,5 @@ GOAL_RESULT_TIMEOUT = 300
 ROTATING = "rotating"
 DEFAULT = "default"
 OBSERVING = "observing"
+MOVING = "moving"
+CIRCLE_APPROACHED = "circle_approached"
