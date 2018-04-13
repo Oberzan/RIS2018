@@ -17,7 +17,7 @@ class Clusterer():
         self.centers = []
         self.markers = MarkerArray()
         self.CENTER_THRESHOLD = 0.6
-        self.MIN_CENTER_DETECTIONS = 20
+        self.MIN_CENTER_DETECTIONS = 100
         self.current_center_index = 0
 
         self.circles_detected = 0
@@ -98,6 +98,7 @@ class Clusterer():
 
             if new_center.n >= self.MIN_CENTER_DETECTIONS and not new_center.is_visited and self.circles_detected < 3:
                 new_center.is_visited = True
+                self.centers[ix] = new_center
                 circle_target = Point()
                 circle_target.x = new_center.x
                 circle_target.y = new_center.y
