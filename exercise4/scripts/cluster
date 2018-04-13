@@ -17,8 +17,10 @@ class Clusterer():
         self.centers = []
         self.markers = MarkerArray()
         self.CENTER_THRESHOLD = 0.6
-        self.MIN_CENTER_DETECTIONS = 10
+        self.MIN_CENTER_DETECTIONS = 20
         self.current_center_index = 0
+
+        self.circles_detected = 0
 
         self.colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
 
@@ -52,6 +54,7 @@ class Clusterer():
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
         markers = [self.point_2_marker(p, ix) for (ix, p) in enumerate(by_n[:3])]
         print("Publishing {} markers.".format(len(markers)))
+        print(by_n)
         self.markers_pub.publish(markers)
 
     def point_2_marker(self, point_world, ix):
@@ -92,6 +95,16 @@ class Clusterer():
         if closest_center:
             new_center = closest_center.move_center(p)
             self.centers[ix] = new_center
+
+            if new_center.n >= self.MIN_CENTER_DETECTIONS and not new_center.is_visited and self.circles_detected < 3:
+                new_center.is_visited = True
+                circle_target = Point()
+                circle_target.x = new_center.x
+                circle_target.y = new_center.y
+                self.circles_detected += 1
+
+                print("Publishing point: {}".format(circle_target))
+                self.circle_publisher.publish(circle_target)
         else:
             self.centers.append(ClusterPoint(p.x, p.y, 1))
             print("Adding new center")
