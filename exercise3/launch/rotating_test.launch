@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="exercise3" type="rotating_test" name="map_goals" output="screen">
+  <node pkg="exercise3" type="rotating_test" name="rotating_test" output="screen">
       <remap from="goal" to="/move_base_simple/goal" />
   </node>
 

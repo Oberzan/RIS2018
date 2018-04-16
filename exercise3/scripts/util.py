@@ -6,7 +6,7 @@ import rospy
 from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 from geometry_msgs.msg import Point, Quaternion
 from move_base_msgs.msg import MoveBaseGoal
-from math import atan2, pi
+from math import atan2, pi,degrees
 
 
 def flip(m, axis):
@@ -21,14 +21,23 @@ def flip(m, axis):
     return m[tuple(indexer)]
 
 def angle_to_goal(viewpoint, target):
-    angle = atan2(-(target.y - viewpoint.y), -(target.x - viewpoint.x))
-    shifted = angle - 1.57079633
+    angle = atan2(-(target.y - viewpoint.y), -(target.x - viewpoint.x))    
+    shifted = angle - pi
 
     if shifted < -pi:
         shifted = abs(shifted) % pi
 
-    print("Angle to goal: {}".format(shifted))
+    print("Angle to goal: {}".format(degrees(shifted)))
     return shifted
+
+def unit_vector(vector):
+    return vector / np.linalg.norm(vector)
+
+def angle_between(v1, v2):
+    """ Returns the angle in radians between vectors 'v1' and 'v2'"""
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 def normalize_value(value, max=1, min=0):
     return (value - min) / (max - min)
@@ -54,11 +63,11 @@ def approached_target(viewpoint, orientation, approach_factor=0.7):
 
 def point_2_base_goal(point, frame_id="map", orientation=None):
     goal = PoseStamped()
-    goal.header.frame_id = frame_id
-    goal.pose.orientation.w = 1
-    if orientation:
+    goal.header.frame_id = frame_id    
+    if orientation is not None:
         goal.pose.orientation = orientation
-
+    else:
+        goal.pose.orientation.w=1
     goal.pose.position = point
     goal.header.stamp = rospy.Time(0)
     move_base_goal = MoveBaseGoal()

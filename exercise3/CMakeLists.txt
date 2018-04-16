@@ -21,3 +21,4 @@ catkin_package()
 #target_link_libraries(map_goals_cpp ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 catkin_install_python(PROGRAMS scripts/map_goals DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS scripts/rotating_test DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

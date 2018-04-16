@@ -17,7 +17,7 @@ class Clusterer():
         self.centers = []
         self.markers = MarkerArray()
         self.CENTER_THRESHOLD = 0.6
-        self.MIN_CENTER_DETECTIONS = 40
+        self.MIN_CENTER_DETECTIONS = 15
         self.current_center_index = 0
 
         self.circles_detected = 0

@@ -1,8 +1,8 @@
 <launch>
 
   <node pkg="exercise3" type="generate_path" name="generate_path" output="screen">
-    <param name="img" value="/home/simon/FRI/RIS/mapNo2.pgm"/>
-    <param name="img_yaml" value="/home/simon/FRI/RIS/mapNo2.yaml"/>
+    <param name="img" value="/home/dominik/ROS/src/maps/bigMap.pgm"/>
+    <param name="img_yaml" value="/home/dominik/ROS/src/maps/bigMap.yaml"/>
     <param name="step" value="11"/>
     <param name="erosion" value="13"/>
   </node>
