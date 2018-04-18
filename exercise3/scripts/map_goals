@@ -93,7 +93,15 @@ class MapGoals():
             print("EXITING_ROTATE")
 
         while self.circle_to_visit_jobs:
-            self.viewpoint_publisher.publish(self.circle_to_visit_jobs[0])
+            pose_array = PoseArray()
+            pose_array.poses[0] = Pose(position=self.circle_to_visit_jobs[0])
+            pose_array.poses[1] = Pose(position=point)
+            print("Sending PoseArray")
+            self.viewpoint_publisher.publish(pose_array)
+
+
+
+
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
             try:
                 _ = rospy.wait_for_message("speaker/say", String)
@@ -151,7 +159,7 @@ class MapGoals():
             'cmd_vel_mux/input/navi', Twist, queue_size=10)
         # Publisher for requesting nearest point to a circle
         self.viewpoint_publisher = rospy.Publisher(
-            "/request_viewpoint", Point, queue_size=10)
+            "/request_viewpoint", PoseArray, queue_size=10)
         # Publisher for current state of map_goals
         self.state_publisher = rospy.Publisher(
             "engine/status", String, queue_size=10)

@@ -36,16 +36,26 @@ class GoalGenerator:
         self.pub.publish(new_goal)
 
 
-    def circle_goal_viewpoint_request(self, estimated_circle_center):
-        print("Got request for nearest point to circle: {}".format(estimated_circle_center))
 
 
-        nearest_viewpoint = min(self.transformed_goals, key=lambda goal: point_distance(goal, estimated_circle_center))
+    def circle_goal_viewpoint_request(self, pose_array):
+        print("Receiving poseArray: ", pose_array)
+
+        estimated_circle_center_point = pose_array.poses[0].position
+        robot_location_point = pose_array.poses[1].position
+
+
+        distance_to_circle = point_distance(estimated_circle_center_point, robot_location_point)
+
+        candidate_viewpoints = [p for p in self.transformed_goals if distance_to_circle(p, robot_location_point) <= distance_to_circle]
+        print("Filtered to : ", len(candidate_viewpoints), " points")
+
+        print("Got request for nearest point to circle: {}".format(estimated_circle_center_point))
+
+        nearest_viewpoint = min(candidate_viewpoints, key=lambda goal: point_distance(goal, estimated_circle_center_point))
 
         print("Calculated viewpoint at: {}".format(nearest_viewpoint))
         self.viewpoint_publisher.publish(nearest_viewpoint)
-
-
 
 
 
