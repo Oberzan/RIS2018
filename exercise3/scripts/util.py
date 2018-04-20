@@ -75,6 +75,13 @@ def point_2_base_goal(point, frame_id="map", orientation=None):
     return move_base_goal
 
 
+def get_approached_viewpoint(viewpoint, target, threshold=0.2):
+    vector_to_target = Point(target.x - viewpoint.x, target.y - viewpoint.y, 0)
+    dist = point_distance(viewpoint, target)
+    k = dist / threshold
+    return Point(target.x - vector_to_target.x / k, target.y - vector_to_target.y / k, 0)
+
+
 def erode_image(img, erosion_factor):
     kernel = np.ones((erosion_factor, erosion_factor), np.uint8)
     return cv2.erode(img, kernel, iterations=1)

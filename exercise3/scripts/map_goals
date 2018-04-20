@@ -16,7 +16,7 @@ from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
 from constants import ACTION_CLIENT_STATUSES, ROTATE_SPEED, ROTATE_ANGLE, GOAL_RESULT_TIMEOUT, ROTATING, DEFAULT, MOVING, CIRCLE_APPROACHING, CIRCLE_APPROACHED
 from moves import rotate
-from util import point_2_base_goal, flip, orientation_vector, approached_target, angle_to_goal, angle_between
+from util import point_2_base_goal, flip, orientation_vector, approached_target, angle_to_goal, angle_between, get_approached_viewpoint
 from tf.transformations import euler_from_quaternion, quaternion_about_axis
 
 
@@ -94,13 +94,11 @@ class MapGoals():
 
         while self.circle_to_visit_jobs:
             pose_array = PoseArray()
+            self.current_circle_target = self.circle_to_visit_jobs[0]
             pose_array.poses[0] = Pose(position=self.circle_to_visit_jobs[0])
             pose_array.poses[1] = Pose(position=point)
             print("Sending PoseArray")
             self.viewpoint_publisher.publish(pose_array)
-
-
-
 
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
             try:
@@ -124,6 +122,7 @@ class MapGoals():
         self.circle_rotating_rate = rospy.Rate(10)
         self.circle_to_visit_jobs = []
         self.state = DEFAULT
+        self.current_circle_target = None
 
         self.map_initialized_publisher = rospy.Publisher(
             "/map_initialized", Point, queue_size=10)
@@ -236,9 +235,25 @@ class MapGoals():
         print("Action result: " +
               ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
-        #self.approach(viewpoint, self.current_circle_target, quaternion)
+
+        print(type(viewpoint), type(self.current_circle_target))
+        approached_target = get_approached_viewpoint(viewpoint, self.current_circle_target)
+
+        print("Aproached target: ", approached_target)
+
+        move_base_goal = point_2_base_goal(approached_target, orientation=quaternion)
+        self.action_client.send_goal(move_base_goal)
+        self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
+
+        print("Moved to approached target!")
+        print("Action result: " +
+              ACTION_CLIENT_STATUSES[self.action_client.get_state()])
+
+
 
         self.state = CIRCLE_APPROACHED
+
+
 
         say = String()
         say.data = "Circle detected"
