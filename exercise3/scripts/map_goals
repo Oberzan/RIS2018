@@ -95,8 +95,9 @@ class MapGoals():
         while self.circle_to_visit_jobs:
             pose_array = PoseArray()
             self.current_circle_target = self.circle_to_visit_jobs[0]
-            pose_array.poses[0] = Pose(position=self.circle_to_visit_jobs[0])
-            pose_array.poses[1] = Pose(position=point)
+            pose_array.poses = []
+            pose_array.poses.append(Pose(position=self.circle_to_visit_jobs[0]))
+            pose_array.poses.append(Pose(position=point))
             print("Sending PoseArray")
             self.viewpoint_publisher.publish(pose_array)
 
@@ -222,11 +223,11 @@ class MapGoals():
     def viewpoint_callback(self, viewpoint):
         angle = angle_between((
             self.current_circle_target.x-viewpoint.x,
-            self.current_circle_target.y-viewpoint.y, 0), (1, 0, 0))
+            self.current_circle_target.y-viewpoint.y, 0), (0, 1, 0))
         quaternion = quaternion_about_axis(angle, (0, 0, 1))
         quaternion = Quaternion(
             quaternion[0], quaternion[1], quaternion[2], quaternion[3])
-
+        print(quaternion)
         move_base_goal = point_2_base_goal(viewpoint, orientation=quaternion)
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))

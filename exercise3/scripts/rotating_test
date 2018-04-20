@@ -10,7 +10,7 @@ import rospy
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
 from std_msgs.msg import String
-from geometry_msgs.msg import Point, Twist, PoseArray, Pose
+from geometry_msgs.msg import Point, Twist, PoseArray, Pose,Quaternion
 from nav_msgs.msg import Odometry
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
@@ -47,17 +47,14 @@ class Rotator():
         # viewpoint = Point(-1, 1.7, 0)
         # target = Point(-1.12, 2.525, 0)
 
-        viewpoint = Point(-0.761897087097, 0.53572010994, 0)
-        target = Point(-2.03460431099, 0.592589259148, 0)        
+        viewpoint = Point(-0.8217, 0.39334, 0)
+        target = Point(-0.8217, 0.09334, 0)        
 
-        angle = angle_between((target.x-viewpoint.x,target.y-viewpoint.y,0),(1,0,0))
-        quaternion = quaternion_about_axis(angle,(0,0,1))
-        print(degrees(angle))
-        print(quaternion)
+        
 
-        #self.theta = None
+        self.theta = None
 
-        #self.rotate_to_goal(viewpoint, target)
+        self.rotate_to_goal(viewpoint, target)
 
     def rotate_to_goal(self, viewpoint, goal):
         while not self.theta:
@@ -65,7 +62,11 @@ class Rotator():
         print("Rotating from viewpoint {}".format(viewpoint))
         print("Rotating to goal {}".format(goal))
 
-        angle = angle_to_goal(viewpoint, goal)
+        angle = angle_between((goal.x-viewpoint.x,goal.y-viewpoint.y,0),(1,0,0))
+        quaternion = quaternion_about_axis(angle, (0, 0, 1))
+        quaternion = Quaternion(
+            quaternion[0], quaternion[1], -quaternion[2], quaternion[3])
+        print(quaternion)
 
         speed = Twist()
         while abs(angle - self.theta) > 0.1:
@@ -82,8 +83,6 @@ class Rotator():
 
     def odom_callback(self, odometry):
         rot_q = odometry.pose.pose.orientation
-        print(rot_q.z)
-        print(rot_q.w)
         (roll, pitch, jaw) = euler_from_quaternion(
             [rot_q.x, rot_q.y, rot_q.z, rot_q.w])
         # print("self.theta={}".format(jaw))

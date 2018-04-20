@@ -47,7 +47,7 @@ class GoalGenerator:
 
         distance_to_circle = point_distance(estimated_circle_center_point, robot_location_point)
 
-        candidate_viewpoints = [p for p in self.transformed_goals if distance_to_circle(p, robot_location_point) <= distance_to_circle]
+        candidate_viewpoints = [p for p in self.transformed_goals if point_distance(p, robot_location_point) <= distance_to_circle]
         print("Filtered to : ", len(candidate_viewpoints), " points")
 
         print("Got request for nearest point to circle: {}".format(estimated_circle_center_point))
@@ -90,7 +90,7 @@ class GoalGenerator:
             '/goal/response', Point, queue_size=10, latch=True)
 
 
-        self.circle_nearest_subcriber = rospy.Subscriber("/request_viewpoint", Point, self.circle_goal_viewpoint_request)
+        self.circle_nearest_subcriber = rospy.Subscriber("/request_viewpoint", PoseArray, self.circle_goal_viewpoint_request)
 
         self.viewpoint_publisher = rospy.Publisher("/response_viewpoint", Point, queue_size=100)
 
