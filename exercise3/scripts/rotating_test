@@ -44,13 +44,26 @@ class Rotator():
 
         print("MapGoals initialized.")
 
-        # viewpoint = Point(-1, 1.7, 0)
-        # target = Point(-1.12, 2.525, 0)
+        viewpoint = Point(-1, 1.7, 0)
+        target = Point(-0.735, -0.0296, 0)
 
-        viewpoint = Point(-0.8217, 0.39334, 0)
-        target = Point(-0.8217, 0.09334, 0)        
+        viewpoint = Point(-1, 1.7, 0)
+        target = Point(-1, 2.58, 0)        
 
-        
+        vector = (target.x-viewpoint.x,target.y-viewpoint.y,0)
+        print(vector)
+        angle = angle_between(vector,(1,0,0))
+        if target.y<viewpoint.y:
+            angle=-angle
+        quaternion = quaternion_about_axis(angle, (0, 0, 1))
+        quaternion = Quaternion(
+            quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+
+        move_base_goal = point_2_base_goal(viewpoint, orientation=quaternion)
+        self.action_client.send_goal(move_base_goal)
+        print(degrees(angle))
+        print(quaternion)
+        self.action_client.wait_for_result(rospy.Duration(GOAL_RESULT_TIMEOUT))
 
         self.theta = None
 
@@ -83,6 +96,11 @@ class Rotator():
 
     def odom_callback(self, odometry):
         rot_q = odometry.pose.pose.orientation
+<<<<<<< Updated upstream
+=======
+        #print(rot_q.z)
+        #print(rot_q.w)
+>>>>>>> Stashed changes
         (roll, pitch, jaw) = euler_from_quaternion(
             [rot_q.x, rot_q.y, rot_q.z, rot_q.w])
         # print("self.theta={}".format(jaw))

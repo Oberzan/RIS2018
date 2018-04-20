@@ -64,7 +64,7 @@ def approached_target(viewpoint, orientation, approach_factor=0.7):
 def point_2_base_goal(point, frame_id="map", orientation=None):
     goal = PoseStamped()
     goal.header.frame_id = frame_id    
-    if orientation is not None:
+    if orientation is not None:        
         goal.pose.orientation = orientation
     else:
         goal.pose.orientation.w=1
@@ -92,8 +92,8 @@ def generate_goals(img, step, offset_x=0, offset_y=0):
     goals = []
     for y in range(step, height, step):
         for x in range(step, width, step):
-            if len(goals) >= 3:
-               return goals
+            #if len(goals) >= 3:
+            #   return goals
 
             inner_y = y + offset_y
             inner_x = x + offset_x

@@ -99,8 +99,8 @@ class GoalGenerator:
 
         self.img = cv2.imread(rospy.get_param('~img'), 0)
 
-        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        cv2.namedWindow("Erosion Demo", cv2.WINDOW_NORMAL)
+        #cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        #cv2.namedWindow("Erosion Demo", cv2.WINDOW_NORMAL)
 
         erosion_factor = rospy.get_param('~erosion')
         goal_step = rospy.get_param('~step')
@@ -125,15 +125,19 @@ class GoalGenerator:
 
         print("Generated {} goals".format(len(self.all_goals)))
 
-        draw_with_goals(self.img, self.all_goals)
-        cv2.imshow("Erosion Demo", self.erosion)
+        #draw_with_goals(self.img, self.all_goals)
+        #cv2.imshow("Erosion Demo", self.erosion)
 
-        while True:
-            k = cv2.waitKey(0)
-            if k == 27:
-                cv2.destroyAllWindows()
-                break
+        # while True:
+        #     k = cv2.waitKey(0)
+        #     if k == 27:
+        #         cv2.destroyAllWindows()
+        #         break
 
 
 if __name__ == '__main__':
     _ = GoalGenerator()
+    try:
+        rospy.spin()
+    except KeyboardInterrupt:
+        print("Shutting down")

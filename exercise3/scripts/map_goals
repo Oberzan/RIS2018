@@ -91,16 +91,16 @@ class MapGoals():
             rotate(self.velocity_publisher, ROTATE_SPEED,
                    ROTATE_ANGLE, self.state_publisher)
             print("EXITING_ROTATE")
-
+        if self.robot_location is None:
+            self.robot_location=point
         while self.circle_to_visit_jobs:
             pose_array = PoseArray()
             self.current_circle_target = self.circle_to_visit_jobs[0]
             pose_array.poses = []
             pose_array.poses.append(Pose(position=self.circle_to_visit_jobs[0]))
-            pose_array.poses.append(Pose(position=point))
+            pose_array.poses.append(Pose(position=self.robot_location))
             print("Sending PoseArray")
             self.viewpoint_publisher.publish(pose_array)
-
             self.circle_to_visit_jobs = self.circle_to_visit_jobs[1:]
             try:
                 _ = rospy.wait_for_message("speaker/say", String)
@@ -124,6 +124,7 @@ class MapGoals():
         self.circle_to_visit_jobs = []
         self.state = DEFAULT
         self.current_circle_target = None
+        self.robot_location=None
 
         self.map_initialized_publisher = rospy.Publisher(
             "/map_initialized", Point, queue_size=10)
@@ -221,9 +222,13 @@ class MapGoals():
               ACTION_CLIENT_STATUSES[self.action_client.get_state()])
 
     def viewpoint_callback(self, viewpoint):
+        self.robot_location=viewpoint
         angle = angle_between((
             self.current_circle_target.x-viewpoint.x,
-            self.current_circle_target.y-viewpoint.y, 0), (0, 1, 0))
+            self.current_circle_target.y-viewpoint.y, 0), (1, 0, 0))
+        if self.current_circle_target.y<viewpoint.y:
+            print("Neki neki")
+            angle=-angle
         quaternion = quaternion_about_axis(angle, (0, 0, 1))
         quaternion = Quaternion(
             quaternion[0], quaternion[1], quaternion[2], quaternion[3])
@@ -238,7 +243,7 @@ class MapGoals():
 
 
         print(type(viewpoint), type(self.current_circle_target))
-        approached_target = get_approached_viewpoint(viewpoint, self.current_circle_target)
+        approached_target = get_approached_viewpoint(viewpoint, self.current_circle_target,0.4)
 
         print("Aproached target: ", approached_target)
 
@@ -268,7 +273,6 @@ class MapGoals():
             self.speaker_publisher.publish(say)
 
     def cluster_point_callback(self, circle_point):
-        self.current_circle_target = circle_point
         print("Received and asking for viewpoint: {}".format(circle_point))
         self.circle_to_visit_jobs.append(circle_point)
         self.state = CIRCLE_APPROACHING
