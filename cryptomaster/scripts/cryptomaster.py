@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
-roslib.load_manifest('cryptomaster')
 import roslib
+roslib.load_manifest('cryptomaster')
 import numpy as np
 import rospy
 from path_generator import GoalGenerator
@@ -24,8 +24,7 @@ class CryptoMaster(object):
         self.state = states.WAITING_FOR_MAP
         self.action_client = SimpleActionClient("move_base", MoveBaseAction)
         self.action_client.wait_for_server()
-        self.goal_generator = GoalGenerator(rospy.param(
-            '~map'), erosion_factor=rospy.param('~erosion'), goal_step=rospy.param('~step'))
+        self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'), goal_step=rospy.get_param('~step'))
 
         self.clusterer = Clusterer(min_center_detections=15)
         self.cv_map = None
@@ -39,7 +38,7 @@ class CryptoMaster(object):
 
         self.state_handlers = {
             states.READY_FOR_GOAL: self.ready_for_goal_state_handler,
-            states.WAITING_FOR_MAP: lambda _: print("Waiting for map"),
+            states.WAITING_FOR_MAP: self.map_state_handler,
         }
 
         _ = rospy.Subscriber(
@@ -53,6 +52,10 @@ class CryptoMaster(object):
 
         self.speaker_publisher = rospy.Publisher(
             "speaker/say", String, queue_size=10)
+
+    def map_state_handler(self):
+        print("Waiting for map")
+
 
     def run_robot(self):
         rate = rospy.Rate(10)  # 10hz
@@ -79,9 +82,10 @@ class CryptoMaster(object):
 
     def ready_for_goal_state_handler(self):
         print("--------Ready For Goal State Handler--------")
-        new_goal = nearest_goal(self.current_viewpoint, self.goals_left)
-        self.goals_left.remove(new_goal)
+        new_goal, _ = nearest_goal(self.current_viewpoint, self.goals_left)
         print("Got new goal: ", new_goal)
+        self.goals_left.remove(new_goal)
+        
         print(len(self.goals_left), " goals left.")
 
         move_status_result = self.move_to_point(new_goal)
@@ -95,7 +99,7 @@ class CryptoMaster(object):
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
-        move_base_goal = point_2_base_goal(goal, quaternion)
+        move_base_goal = point_2_base_goal(goal, orientation=quaternion)
         self.action_client.send_goal(move_base_goal)
         self.action_client.wait_for_result(
             rospy.Duration(GOAL_RESULT_TIMEOUT))
@@ -176,7 +180,7 @@ class CryptoMaster(object):
 
         print("Map successfully saved.")
 
-        pixel_goals = self.goal_generator.generate_goals()
+        pixel_goals = self.goal_generator.generate_points()
         self.viewpoints = [self.transform_map_point(p) for p in pixel_goals]
         self.goals_left = self.viewpoints[:]
         print("Transformed goals to map coordinates")
