@@ -53,11 +53,11 @@ class CryptoMaster(object):
             "speaker/say", String, queue_size=10)
 
     def map_state_handler(self):
-        print("Waiting for map")
+        print("Waiting for map_callback...")
 
 
     def run_robot(self):
-        rate = rospy.Rate(10)  # 10hz
+        rate = rospy.Rate(2)  # 10hz
 
         while not rospy.is_shutdown():
             state_handler = self.state_handlers.get(self.state)
