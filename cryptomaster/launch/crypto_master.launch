@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="cryptomaster" type="cryptomaster.py" name="cryptomaster.py" output="screen">
+  <node pkg="cryptomaster" type="cryptomaster.py" name="cryptomaster" output="screen">
     <param name="img" value="/home/dominik/ROS/src/maps/bigMap.pgm"/>
     <param name="img_yaml" value="/home/dominik/ROS/src/maps/bigMap.yaml"/>
     <param name="step" value="11"/>

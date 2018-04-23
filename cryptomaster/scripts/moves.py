@@ -1,7 +1,6 @@
 import math
 import rospy
 from geometry_msgs.msg import Twist
-from constants import ROTATING, DEFAULT, OBSERVING
 
 
 def rotate(velocity_publisher, speed, angle, step_angle=45, clockwise=True, sleep_duration=0.1):

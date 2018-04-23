@@ -15,8 +15,8 @@ class GoalGenerator:
         self.goal_step = goal_step
         self.img = cv2.imread(map_img_path, 0)
 
-    def generate_points(self, img):
-        eroded_image = self.erode_image(img)
+    def generate_points(self):
+        eroded_image = self.erode_image(self.img)
         goals = self.generate_goals(eroded_image, offset_x=7, offset_y=-2)
         return goals
 

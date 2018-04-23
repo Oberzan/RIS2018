@@ -1,0 +1,6 @@
+<launch>
+
+  <node pkg="exercise6" type="control_manipulator" name="control_manipulator" output="screen">
+  </node>
+
+</launch>
