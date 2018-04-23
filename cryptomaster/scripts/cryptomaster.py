@@ -33,8 +33,7 @@ class CryptoMaster(object):
         self.map_resolution = 0
         self.viewpoints = None
         self.goals_left = None
-        self.robot_location = None
-        self.current_viewpoint = Point(100.0, 15.0, 0.0)
+        self.robot_location = Point(100.0, 15.0, 0.0)
         self.circles_detected = 0
 
         self.state_handlers = {
@@ -79,7 +78,7 @@ class CryptoMaster(object):
 
     def ready_for_goal_state_handler(self):
         print("--------Ready For Goal State Handler--------")
-        new_goal = nearest_goal(self.current_viewpoint, self.goals_left)
+        new_goal = nearest_goal(self.robot_location, self.goals_left)
         self.goals_left.remove(new_goal)
         print("Got new goal: ", new_goal)
         print(len(self.goals_left), " goals left.")
@@ -91,7 +90,6 @@ class CryptoMaster(object):
             rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
             self.state = states.READY_FOR_GOAL
 
-        self.robot_location = new_goal
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
@@ -102,6 +100,7 @@ class CryptoMaster(object):
 
         status = ACTION_CLIENT_STATUSES[self.action_client.get_state()]
         print("Action result: ", status)
+        self.robot_location = goal
         return status
 
     def handle_cluster_job(self, target):
