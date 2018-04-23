@@ -56,7 +56,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   pcl::PointIndices::Ptr inliers_plane(new pcl::PointIndices), inliers_cylinder(new pcl::PointIndices);
 
   voxel_filter.setInputCloud(cloud_blob);
-  voxel_filter.setLeafSize(0.1, 0.1, 0.1);
+  voxel_filter.setLeafSize(0.02f, 0.02f, 0.02f);
   voxel_filter.filter(voxel_filtered);
 
   // Read in the cloud data
@@ -78,7 +78,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 
   // Create the segmentation object for the planar model and set all the parameters
   seg.setOptimizeCoefficients(true);
-  seg.setModelType(pcl::SACMODEL_NORMAL_PLANE);
+  seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
   seg.setNormalDistanceWeight(0.1);
   seg.setMethodType(pcl::SAC_RANSAC);
   seg.setMaxIterations(100);
