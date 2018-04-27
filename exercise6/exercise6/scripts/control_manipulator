@@ -45,8 +45,11 @@ class RobotArm:
 
 
     def state_callback(self, data):
+        pass
+        """
         for n, joint in enumerate(data.joints):
             print("Joint", n, "is in position", joint.position, ", goal is", joint.goal)
+        """
 
 
 

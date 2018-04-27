@@ -143,16 +143,12 @@ class CryptoMaster(object):
 
 
     def manipulate_hand_state_handler(self):
-        print(self.hand_manipulator)
+        self.hand_manipulator.move_to_standby()
+        for i in range(0,3):
+            self.hand_manipulator.grab_coin(i)
 
-        self.hand_manipulator.move_to_position1()
+        self.hand_manipulator.drop_coin()
 
-        rospy.sleep(5)
-
-
-
-        print("HAHA")
-        ## TODO
 
     def handle_cluster_job(self, target):
         print("--------Handle Cluster Job--------")
