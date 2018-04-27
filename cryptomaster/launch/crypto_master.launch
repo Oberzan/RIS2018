@@ -1,11 +1,13 @@
 <launch>
 
   <node pkg="cryptomaster" type="cryptomaster.py" name="cryptomaster" output="screen">
-    <param name="img" value="/home/dominik/ROS/src/maps/bigMap.pgm"/>
-    <param name="img_yaml" value="/home/dominik/ROS/src/maps/bigMap.yaml"/>
+    <param name="img" value="/home/simon/catkin_ws/src/maps/bigMap.pgm"/>
+    <param name="img_yaml" value="/home/simon/catkin_ws/src/maps/bigMap.yaml"/>
     <param name="step" value="11"/>
     <param name="erosion" value="13"/>
     <remap from="goal" to="/move_base_simple/goal" />
+  </node>
+   <node pkg="exercise6" type="control_manipulator" name="control_manipulator" output="screen">
   </node>
 
 </launch>

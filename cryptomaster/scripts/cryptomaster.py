@@ -145,6 +145,10 @@ class CryptoMaster(object):
     def manipulate_hand_state_handler(self):
         print(self.hand_manipulator)
 
+        self.hand_manipulator.move_to_position1()
+
+        rospy.sleep(5)
+
 
 
         print("HAHA")
