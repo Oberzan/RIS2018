@@ -112,11 +112,11 @@ class CryptoMaster(object):
         self.robot_location = goal
         return status
 
-    def circle_approached_handler(self, approached_target, current_orientation):
+    def circle_approached_handler(self, approached_target, current_orientation_ros, current_orientation):
         print("--------Circle Approached Handle--------")
         q_rot = quaternion_from_euler(1.5707, 0, 0)
         new_orientation = quaternion_multiply(q_rot, current_orientation)
-
+        current_orientation
         print("New orientation: ", new_orientation)
 
         _ = self.move_to_point(approached_target, new_orientation)
@@ -139,8 +139,8 @@ class CryptoMaster(object):
         nearest_viewpoint = self.find_nearest_viewpoint(
             target, self.robot_location)
 
-        quaternion = quaternion_between(target, nearest_viewpoint)
-        _ = self.move_to_point(target, quaternion=quaternion)
+        quaternion_ros, quaternion = quaternion_between(target, nearest_viewpoint)
+        _ = self.move_to_point(target, quaternion=quaternion_ros)
         print("Moved to viewpoint!")
 
         approached_target = get_approached_viewpoint(
@@ -148,7 +148,7 @@ class CryptoMaster(object):
 
         print("Aproached target: ", approached_target)
 
-        _ = self.move_to_point(approached_target, quaternion=quaternion)
+        _ = self.move_to_point(approached_target, quaternion=quaternion_ros)
 
         print("Moved to approached target!")
         self.state = states.CIRCLE_APPROACHED
@@ -156,7 +156,7 @@ class CryptoMaster(object):
         self.say("Circle detected", 3)
         self.circles_detected += 1
 
-        self.circle_approached_handler(approached_target, quaternion)
+        self.circle_approached_handler(approached_target, quaternion_ros, quaternion)
 
     def find_nearest_viewpoint(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")

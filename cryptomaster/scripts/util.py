@@ -68,9 +68,9 @@ def quaternion_between(target, viewpoint):
         angle = -angle
 
     quaternion = quaternion_about_axis(angle, (0, 0, 1))
-    quaternion = Quaternion(
+    quaternion_ros, quaternion = Quaternion(
         quaternion[0], quaternion[1], quaternion[2], quaternion[3])
-    return quaternion
+    return quaternion_ros, quaternion
 
 
 def get_approached_viewpoint(viewpoint, target, threshold=0.2):
