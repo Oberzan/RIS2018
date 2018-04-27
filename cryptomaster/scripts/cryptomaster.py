@@ -18,6 +18,8 @@ from cluster import Clusterer
 from std_msgs.msg import String
 from tf.transformations import quaternion_from_euler, quaternion_multiply
 from std_msgs.msg import Int8
+from geometry_msgs.msg import Quaternion
+
 
 
 class CryptoMaster(object):
@@ -116,10 +118,12 @@ class CryptoMaster(object):
         print("--------Circle Approached Handle--------")
         q_rot = quaternion_from_euler(1.5707, 0, 0)
         new_orientation = quaternion_multiply(q_rot, current_orientation)
-        current_orientation
         print("New orientation: ", new_orientation)
 
-        _ = self.move_to_point(approached_target, new_orientation)
+        quaternion_ros = Quaternion(
+            new_orientation[0], new_orientation[1], new_orientation[2], new_orientation[3])
+
+        _ = self.move_to_point(approached_target, quaternion_ros)
 
         print("Rotated for 90 degrees.")
 
