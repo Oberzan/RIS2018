@@ -22,16 +22,16 @@ class Clusterer():
 
         self.circles_detected = 0
 
-        self.colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
+        self.colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
+            255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
         self.markers_pub = rospy.Publisher(
             'markers', MarkerArray, queue_size=1000)
 
-
         _ = rospy.Subscriber("cluster/request", Point, self.request_callback)
-        self.circle_publisher = rospy.Publisher("cluster/goal", Point, queue_size=10)
-
+        self.circle_publisher = rospy.Publisher(
+            "cluster/goal", Point, queue_size=10)
 
     def request_callback(self, point):
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
@@ -49,16 +49,15 @@ class Clusterer():
         print("Publishing point: {}".format(circle_target))
         self.circle_publisher.publish(circle_target)
 
-
     def publish_markers(self):
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
-        markers = [self.point_2_marker(p, ix) for (ix, p) in enumerate(by_n[:3])]
+        markers = [self.point_2_marker(p, ix)
+                   for (ix, p) in enumerate(by_n[:3])]
         print("Publishing {} markers.".format(len(markers)))
         print(by_n)
         self.markers_pub.publish(markers)
 
     def point_2_marker(self, point_world, ix):
-
         pose = Pose()
         pose.position.x = point_world.x
         pose.position.y = point_world.y

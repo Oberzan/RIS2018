@@ -20,3 +20,8 @@ ROTATE_ANGLE = 280
 
 
 NUM_CIRCLES_TO_DETECT = 3
+
+
+ARM_POSITION_1 = [-1.7, 2.5, -2.5, -1.5, -0.1, 0.4]
+ARM_POSITION_2 = [1, 0.5, 0.1, 0.5, 1.4, 0]
+ARM_POSITION_3 = [0.2, 1.5, 0.4, 1.5, 0.4, 1]

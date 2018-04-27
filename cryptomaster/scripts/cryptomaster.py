@@ -4,17 +4,20 @@ import roslib
 roslib.load_manifest('cryptomaster')
 import numpy as np
 import rospy
+import math
 from path_generator import GoalGenerator
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
 from util import flip, nearest_goal, point_2_base_goal, point_distance, quaternion_between, get_approached_viewpoint
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Point, Twist, PoseArray, Pose, Quaternion
+from geometry_msgs.msg import Point, Twist
 import states as states
 from constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT
 from moves import rotate
 from cluster import Clusterer
 from std_msgs.msg import String
+from tf.transformations import quaternion_from_euler, quaternion_multiply
+from std_msgs.msg import Int8
 
 
 class CryptoMaster(object):
@@ -37,27 +40,25 @@ class CryptoMaster(object):
 
         self.state_handlers = {
             states.READY_FOR_GOAL: self.ready_for_goal_state_handler,
-            states.WAITING_FOR_MAP: self.map_state_handler,
+            states.WAITING_FOR_MAP: self.map_state_handler
         }
 
         _ = rospy.Subscriber(
             "map", OccupancyGrid, self.map_callback)
-
+        self.arm_publisher = rospy.Publisher(
+            "set_manipulator_position", Int8, queue_size=10)
         self.state_publisher = rospy.Publisher(
             "engine/status", String, queue_size=10)
-
         self.velocity_publisher = rospy.Publisher(
             'cmd_vel_mux/input/navi', Twist, queue_size=10)
-
         self.speaker_publisher = rospy.Publisher(
             "speaker/say", String, queue_size=10)
 
     def map_state_handler(self):
         print("Waiting for map_callback...")
 
-
     def run_robot(self):
-        rate = rospy.Rate(2)  # 10hz
+        rate = rospy.Rate(2)
 
         while not rospy.is_shutdown():
             state_handler = self.state_handlers.get(self.state)
@@ -93,7 +94,6 @@ class CryptoMaster(object):
             rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
             self.state = states.READY_FOR_GOAL
 
-
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
         move_base_goal = point_2_base_goal(goal, orientation=quaternion)
@@ -105,6 +105,28 @@ class CryptoMaster(object):
         print("Action result: ", status)
         self.robot_location = goal
         return status
+
+    def circle_approached_handler(self, approached_target, current_orientation):
+        print("--------Circle Approached Handle--------")
+        q_rot = quaternion_from_euler(1.5707, 0, 0)
+        new_orientation = quaternion_multiply(q_rot, current_orientation)
+
+        print("New orientation: ", new_orientation)
+
+        _ = self.move_to_point(approached_target, new_orientation)
+
+        print("Rotated for 90 degrees.")
+
+
+
+        ## TODO manipulate arm
+
+
+
+
+        self.say("Coin thrown in!", 1)
+        self.state = states.READY_FOR_GOAL
+
 
     def handle_cluster_job(self, target):
         print("--------Handle Cluster Job--------")
@@ -127,7 +149,8 @@ class CryptoMaster(object):
 
         self.say("Circle detected", 3)
         self.circles_detected += 1
-        self.state = states.READY_FOR_GOAL
+
+        self.circle_approached_handler(approached_target, quaternion)
 
     def find_nearest_viewpoint(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")
@@ -197,7 +220,6 @@ class CryptoMaster(object):
         say.data = data
         self.speaker_publisher.publish(say)
         rospy.sleep(sleep_duration)
-
 
 def main(args):
     crypto_robot = CryptoMaster()
