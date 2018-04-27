@@ -19,6 +19,7 @@ from std_msgs.msg import String
 from tf.transformations import quaternion_from_euler, quaternion_multiply
 from std_msgs.msg import Int8
 from geometry_msgs.msg import Quaternion
+from hand import HandManipulator
 
 
 
@@ -31,6 +32,7 @@ class CryptoMaster(object):
         self.action_client.wait_for_server()
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'), goal_step=rospy.get_param('~step'))
 
+        self.hand_manipulator = HandManipulator()
         self.clusterer = Clusterer(min_center_detections=15)
         self.cv_map = None
         self.map_transform = None
@@ -42,7 +44,8 @@ class CryptoMaster(object):
 
         self.state_handlers = {
             states.READY_FOR_GOAL: self.ready_for_goal_state_handler,
-            states.WAITING_FOR_MAP: self.map_state_handler
+            states.WAITING_FOR_MAP: self.map_state_handler,
+            states.MANIPULATE_HAND: self.manipulate_hand_state_handler
         }
 
         _ = rospy.Subscriber(
@@ -114,7 +117,7 @@ class CryptoMaster(object):
         self.robot_location = goal
         return status
 
-    def circle_approached_handler(self, approached_target, current_orientation_ros, current_orientation):
+    def circle_approached_handler(self, approached_target, current_orientation):
         print("--------Circle Approached Handle--------")
         q_rot = quaternion_from_euler(0, 0, 1.5707)
         new_orientation = quaternion_multiply(q_rot, current_orientation)
@@ -134,9 +137,18 @@ class CryptoMaster(object):
 
 
 
+
         self.say("Coin thrown in!", 1)
         self.state = states.READY_FOR_GOAL
 
+
+    def manipulate_hand_state_handler(self):
+        print(self.hand_manipulator)
+
+
+
+        print("HAHA")
+        ## TODO
 
     def handle_cluster_job(self, target):
         print("--------Handle Cluster Job--------")
@@ -148,7 +160,7 @@ class CryptoMaster(object):
         print("Moved to viewpoint!")
 
         approached_target = get_approached_viewpoint(
-            nearest_viewpoint, target, 0.38)
+            nearest_viewpoint, target, 0.4)
 
         print("Aproached target: ", approached_target)
 
@@ -160,7 +172,7 @@ class CryptoMaster(object):
         self.say("Circle detected", 3)
         self.circles_detected += 1
 
-        self.circle_approached_handler(approached_target, quaternion_ros, quaternion)
+        self.circle_approached_handler(approached_target, quaternion)
 
     def find_nearest_viewpoint(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")
@@ -216,7 +228,11 @@ class CryptoMaster(object):
         self.goals_left = self.viewpoints[:]
         print("Transformed goals to map coordinates")
         print("Viewpoints: ", self.viewpoints)
-        self.state = states.READY_FOR_GOAL
+
+        ## TODO uncoment
+        ## self.state = states.READY_FOR_GOAL
+
+        self.state = states.MANIPULATE_HAND
 
     def transform_map_point(self, point):
         _, size_y = self.cv_map.shape

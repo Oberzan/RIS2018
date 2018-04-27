@@ -4,8 +4,9 @@ import roslib
 # roslib.load_manifest('exercise6')
 import rospy
 
-from std_msgs.msg import Int8
+from std_msgs.msg import Int8, Float32MultiArray
 from openservorobot.msg import MoveJoint, ManipulatorStateM, ManipulatorDescriptionM, JointStateM, JointDescriptionM
+
 
 
 class RobotArm:
@@ -19,6 +20,11 @@ class RobotArm:
         # A subscriber for the current state of the robot
         self.sub_state = rospy.Subscriber(
             "openservorobot/manipulator_state", ManipulatorStateM, self.state_callback)
+
+
+        self.set_manipulator_sub = rospy.Subscriber(
+            "set_manipulator", Float32MultiArray, self.data_callback
+        )
 
         # A subscriber for the current state of the robot
         #self.sub_desc = rospy.Subscriber("openservorobot/manipulator_description", ManipulatorDescriptionM, self.desc_callback)
@@ -37,6 +43,12 @@ class RobotArm:
         self.positions = [[-1.7,2.5,-2.5,-1.5,-0.1,0.4],
                           [1, 0.5, 0.1, 0.5, 1.4, 0],
                           [0.2, 1.5, 0.4, 1.5, 0.4, 1]]
+
+    def data_callback(self, arr):
+        print("Got data: ", arr.data)
+        positions = arr.data
+        for n in range(len(positions)):
+            self.move_joint(n, positions[n], 1)
 
     def state_callback(self, data):
         if self.update_position == True:
