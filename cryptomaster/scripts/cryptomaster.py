@@ -114,8 +114,19 @@ class CryptoMaster(object):
         self.robot_location = goal
         return status
 
-    def circle_approached_handler(self):
+    def circle_approached_handler(self, approached_target, current_orientation_ros, current_orientation):
         print("--------Circle Approached Handle--------")
+        q_rot = quaternion_from_euler(0, 0, 1.5707)
+        new_orientation = quaternion_multiply(q_rot, current_orientation)
+        print("New orientation: ", new_orientation)
+
+        quaternion_ros = Quaternion(
+            new_orientation[0], new_orientation[1], new_orientation[2], new_orientation[3])
+
+        _ = self.move_to_point(approached_target, quaternion_ros)
+
+        print("Rotated for 90 degrees.")
+
 
 
         ## TODO manipulate arm
@@ -133,19 +144,13 @@ class CryptoMaster(object):
             target, self.robot_location)
 
         quaternion_ros, quaternion = quaternion_between(target, nearest_viewpoint)
-        _ = self.move_to_point(target, quaternion=quaternion_ros)
+        _ = self.move_to_point(nearest_viewpoint, quaternion=quaternion_ros)
         print("Moved to viewpoint!")
 
         approached_target = get_approached_viewpoint(
-            nearest_viewpoint, target, 0.4)
+            nearest_viewpoint, target, 0.38)
 
         print("Aproached target: ", approached_target)
-
-
-        q_rot = quaternion_from_euler(1.5707, 0, 0)
-        new_orientation = quaternion_multiply(q_rot, quaternion)
-        quaternion_ros = Quaternion(
-            new_orientation[0], new_orientation[1], new_orientation[2], new_orientation[3])
 
         _ = self.move_to_point(approached_target, quaternion=quaternion_ros)
 
@@ -155,7 +160,7 @@ class CryptoMaster(object):
         self.say("Circle detected", 3)
         self.circles_detected += 1
 
-        self.circle_approached_handler()
+        self.circle_approached_handler(approached_target, quaternion_ros, quaternion)
 
     def find_nearest_viewpoint(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")
