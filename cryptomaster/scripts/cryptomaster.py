@@ -53,6 +53,7 @@ class CryptoMaster(object):
             'cmd_vel_mux/input/navi', Twist, queue_size=10)
         self.speaker_publisher = rospy.Publisher(
             "speaker/say", String, queue_size=10)
+        self.engine_state_publisher = rospy.Publisher("engine/status", String, queue_size=10)
 
     def map_state_handler(self):
         print("Waiting for map_callback...")
@@ -90,9 +91,14 @@ class CryptoMaster(object):
         move_status_result = self.move_to_point(new_goal)
 
         if move_status_result == 'SUCCEEDED':
+            string_message = String()
             self.state = states.OBSERVING
+            string_message.data = self.state
+            self.engine_state_publisher.publish(string_message)
             rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
             self.state = states.READY_FOR_GOAL
+            string_message.data = self.state
+            self.engine_state_publisher.publish(string_message)
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
