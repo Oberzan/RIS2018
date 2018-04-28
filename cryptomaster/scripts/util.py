@@ -4,11 +4,12 @@ from tf2_geometry_msgs.tf2_geometry_msgs import PoseStamped
 import rospy
 from move_base_msgs.msg import MoveBaseGoal
 from geometry_msgs.msg import Quaternion
-from tf.transformations import euler_from_quaternion, quaternion_about_axis
+from tf.transformations import quaternion_about_axis, quaternion_from_euler, quaternion_multiply
+import math
 
 
 def point_distance(p1, p2):
-    return ((p1.x - p2.x)**2 + (p1.y - p2.y)**2)**0.5
+    return ((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2) ** 0.5
 
 
 def nearest_goal(point, goals):
@@ -49,6 +50,15 @@ def point_2_base_goal(point, frame_id="map", orientation=None):
     return move_base_goal
 
 
+## Quaternion, angle in degrees
+def rotate_quaternion(quaternion, angle):
+    q_rot = quaternion_from_euler(0, 0, math.radians(angle))
+    new_orientation = quaternion_multiply(q_rot, quaternion)
+    quaternion_ros = Quaternion(
+        quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+    return new_orientation, quaternion_ros
+
+
 def unit_vector(vector):
     return vector / np.linalg.norm(vector)
 
@@ -62,8 +72,8 @@ def angle_between(v1, v2):
 
 def quaternion_between(target, viewpoint):
     angle = angle_between((
-        target.x-viewpoint.x,
-        target.y-viewpoint.y, 0), (1, 0, 0))
+        target.x - viewpoint.x,
+        target.y - viewpoint.y, 0), (1, 0, 0))
     if target.y < viewpoint.y:
         angle = -angle
 
