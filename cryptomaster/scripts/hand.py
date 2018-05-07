@@ -4,31 +4,35 @@ from std_msgs.msg import Float32MultiArray
 
 class HandManipulator(object):
 
-    def __init__(self):
+    def __init__(self,joint_minimums=(0,0,0,0,0,0)):
+        self.mins = joint_minimums
         ## Grip values
-        self.GRIP_OPEN_VALUE = 0.3
-        self.GRIP_CLOSED_VALUE = 1.0
+        self.GRIP_OPEN_VALUE = 0.8
+        self.GRIP_CLOSED_VALUE = 1.5
 
         ## Coin join value
-        self.COIN_1_JOINT_POSITION = -1.7
+        self.COIN_1_JOINT_POSITION = 0.24
 
         ## Hand positions
         # Standby
-        self.STANDBY_POSITION =         [-0.2, 2, -2, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
-        self.STANDBY_POSITION_UPPER =   [-0.2, 2, -1.2  , -1.5, -0.1, self.GRIP_CLOSED_VALUE]
+        self.STANDBY_POSITION =         [1.74, 2.25, 0.5, 0.13, 1.68, self.GRIP_CLOSED_VALUE]
 
         # Grabing positions
-        self.GRAB_POSITION_UPPER_OPEN = [-1.7, 2, -1.2, -1.5, -0.1, self.GRIP_OPEN_VALUE]
-        self.GRAB_POSITION =            [-1.7, 1.6, -1.8, -1.1, -0.1, self.GRIP_OPEN_VALUE]
-        self.COIN_GRABBED_POSITION =    [-1.7, 1.6, -1.8, -1.1, -0.1, self.GRIP_CLOSED_VALUE]
-        self.GRAB_POSITION_UPPER_CLOSED = [-1.7, 2, -1.2, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_OPEN =          [0.24, 2.25, 1.3, 0.13, 1.68, self.GRIP_OPEN_VALUE]
+        self.GRAB_POSITION =            [0.24, 1.85, 0.7, -1.1, 1.68, self.GRIP_OPEN_VALUE]
+        self.GRABBED_POSITION =         [0.24, 1.85, 0.7, -1.1, 1.68, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_CLOSED =        [0.24, 2.25, 1.3, 0.13, 1.68, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
-        self.DROP_POSITION_CLOSED =     [1.5, 0.5, -0.5, 0, -0.1, self.GRIP_CLOSED_VALUE]
-        self.DROP_POSITION_OPEN =       [1.5, 0.5, -0.5, 0, -0.1, self.GRIP_OPEN_VALUE]
+        self.DROP_POSITION_CLOSED =     [3.44, 0.75, 2, 0, 1.68, self.GRIP_CLOSED_VALUE]
+        self.DROP_POSITION_OPEN =       [3.44, 0.75, 2, 0, 1.68, self.GRIP_OPEN_VALUE]
 
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
+    
+    def sum(self,positions):
+        return [x + y for x,y in zip(self.mins,positions)]
+        
 
     def drop_coin(self):
         self.move_arm_to(self.DROP_POSITION_CLOSED)
@@ -48,18 +52,17 @@ class HandManipulator(object):
         joint_position_value = coin_joint_positions.get(index)
 
         print("Moving to grab coin position")
-        self.move_arm_to(self.STANDBY_POSITION_UPPER)
-        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER_OPEN, joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_OPEN, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.GRAB_POSITION, joint_position_value))
-        self.move_arm_to(self.with_coin_value(self.COIN_GRABBED_POSITION, joint_position_value))
-        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER_CLOSED, joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.GRABBED_POSITION,        joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_CLOSED, joint_position_value))
         print("Coin grabbed")
 
     def move_arm_to(self, data, sleep_duration=2):
         print("----------Hand Manipulator Publish Data----------")
-        print("Posting data: ", data)
+        print("Posting data: ", self.sum(data))
         arr = Float32MultiArray()
-        arr.data = data
+        arr.data = self.sum(data)
         self.position_publisher.publish(arr)
         rospy.sleep(sleep_duration)
 

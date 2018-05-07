@@ -21,6 +21,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Int8
 from hand import HandManipulator
 from tf.transformations import quaternion_from_euler
+from openservorobot.msg import ManipulatorDescriptionM
 
 
 class CryptoMaster(object):
@@ -33,7 +34,9 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        self.hand_manipulator = HandManipulator()
+        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
+        
+        self.hand_manipulator = HandManipulator([joint.dh_min for joint in desc.joints])
         self.clusterer = Clusterer(min_center_detections=15)
         self.cv_map = None
         self.map_transform = None
@@ -141,7 +144,7 @@ class CryptoMaster(object):
             print("Trying viewpoint with index: ", viewpoint_ix)
             nearest_viewpoint = nearest_viewpoints[viewpoint_ix]
             approached_target = get_approached_viewpoint(
-                nearest_viewpoint, target, 0.37)
+                nearest_viewpoint, target, 0.45)
 
             print("Aproached target: ", approached_target)
 
@@ -156,7 +159,7 @@ class CryptoMaster(object):
                 self.clusterer.reset_cluster(cluster_ix)
 
                 self.change_state(states.OBSERVING)
-                rospy.sleep(3)
+                rospy.sleep(5)
                 self.change_state(states.CIRCLE_APPROACHED)
 
                 improved_cluster = self.clusterer.centers[cluster_ix]
@@ -252,9 +255,9 @@ class CryptoMaster(object):
 
 def main(args):
     crypto_robot = CryptoMaster()
-    crypto_robot.run_robot()
-    # crypto_robot.hand_manipulator.grab_coin(0)
-    # crypto_robot.hand_manipulator.drop_coin()
+    #crypto_robot.run_robot()
+    crypto_robot.hand_manipulator.grab_coin(0)
+    crypto_robot.hand_manipulator.drop_coin()
 
 
 if __name__ == '__main__':
