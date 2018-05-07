@@ -141,21 +141,35 @@ class CryptoMaster(object):
             print("Trying viewpoint with index: ", viewpoint_ix)
             nearest_viewpoint = nearest_viewpoints[viewpoint_ix]
             approached_target = get_approached_viewpoint(
-                nearest_viewpoint, target, 0.35)
+                nearest_viewpoint, target, 0.37)
 
             print("Aproached target: ", approached_target)
 
             quaternion_ros, q = quaternion_between(
                 target, approached_target)
-            _, rotated_quat = rotate_quaternion(q, 90)
 
-            approach_status = self.move_to_point(approached_target, quaternion=rotated_quat)
+            approach_status = self.move_to_point(approached_target, quaternion=quaternion_ros)
 
             if approach_status == 'SUCCEEDED':
                 succeded = True
+                _, cluster_ix = self.clusterer.find_nearest_cluster(target)
+                self.clusterer.reset_cluster(cluster_ix)
+
+                self.change_state(states.OBSERVING)
+                rospy.sleep(3)
+                self.change_state(states.CIRCLE_APPROACHED)
+
+                improved_cluster = self.clusterer.centers[cluster_ix]
+                print(improved_cluster)
+
+                _, rotated_quat = rotate_quaternion(q, 90)
+
+                approached_target = get_approached_viewpoint(
+                    approached_target, improved_cluster, 0.32)
+
+                self.move_to_point(approached_target, quaternion=rotated_quat)
 
             viewpoint_ix += 1
-
 
         print("Moved to approached target!")
         self.state = states.CIRCLE_APPROACHED

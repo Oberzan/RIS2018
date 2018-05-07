@@ -37,6 +37,32 @@ class Clusterer():
         self.jobs = self.jobs[1:]
         return job
 
+
+    def reset_cluster(self, cluster_ix):
+        cluster = self.centers[cluster_ix]
+        reseted_cluster = ClusterPoint(cluster.x, cluster.y, 1, True)
+        self.centers[cluster_ix] = reseted_cluster
+
+
+    def find_nearest_cluster(self, p):
+        closest_center = None
+        min_dist = 999999999
+        min_ix = 0
+
+
+        for center_ix, center in enumerate(self.centers):
+            dist = point_distance(p, center)
+            if dist < min_dist:
+                if closest_center:
+                    print("Detected in multiple centers")
+
+                closest_center = center
+                min_dist = dist
+                min_ix = center_ix
+
+
+        return closest_center, min_ix
+
     def point_callback(self, p):
         if self.state != states.OBSERVING:
             return
