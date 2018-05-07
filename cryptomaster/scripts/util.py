@@ -55,7 +55,7 @@ def rotate_quaternion(quaternion, angle):
     q_rot = quaternion_from_euler(0, 0, math.radians(angle))
     new_orientation = quaternion_multiply(q_rot, quaternion)
     quaternion_ros = Quaternion(
-        quaternion[0], quaternion[1], quaternion[2], quaternion[3])
+        new_orientation[0], new_orientation[1], new_orientation[2], new_orientation[3])
     return new_orientation, quaternion_ros
 
 
@@ -73,7 +73,7 @@ def angle_between(v1, v2):
 def quaternion_between(target, viewpoint):
     angle = angle_between((
         target.x - viewpoint.x,
-        target.y - viewpoint.y, 0), (1, 0, 0))
+        target.y - viewpoint.y, 0), (1,0,0))
     if target.y < viewpoint.y:
         angle = -angle
 
