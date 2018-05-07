@@ -67,6 +67,7 @@ class CryptoMaster(object):
         self.state = state
         string_message = String()
         string_message.data = self.state
+        self.clusterer.change_state(state)
         self.engine_state_publisher.publish(string_message)
 
     def run_robot(self):
@@ -79,7 +80,7 @@ class CryptoMaster(object):
                 state_handler()
             else:
                 print("UNKNOWN STATE: ", self.state)
-
+            
             while self.clusterer.has_pending_jobs():
                 circle_target = self.clusterer.get_next_job()
                 self.handle_cluster_job(circle_target)
@@ -120,8 +121,8 @@ class CryptoMaster(object):
 
     def cylinder_approached_handler(self):
         print("--------Cylinder Approached Handle--------")
-        self.hand_manipulator.grab_coin()
-        self.hand_manipulator.drop_coin(self.coins_dropped)
+        self.hand_manipulator.grab_coin(self.coins_dropped)
+        self.hand_manipulator.drop_coin()
         self.say("Coin thrown in!", 1)
         self.coins_dropped += 1
         self.state = states.READY_FOR_GOAL
