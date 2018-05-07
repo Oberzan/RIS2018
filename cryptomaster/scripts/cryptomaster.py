@@ -141,7 +141,7 @@ class CryptoMaster(object):
             print("Trying viewpoint with index: ", viewpoint_ix)
             nearest_viewpoint = nearest_viewpoints[viewpoint_ix]
             approached_target = get_approached_viewpoint(
-                nearest_viewpoint, target, 0.37)
+                nearest_viewpoint, target, 0.45)
 
             print("Aproached target: ", approached_target)
 
@@ -165,7 +165,7 @@ class CryptoMaster(object):
                 _, rotated_quat = rotate_quaternion(q, 90)
 
                 approached_target = get_approached_viewpoint(
-                    approached_target, improved_cluster, 0.32)
+                    approached_target, improved_cluster, 0.315)
 
                 self.move_to_point(approached_target, quaternion=rotated_quat)
 
