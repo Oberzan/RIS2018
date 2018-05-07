@@ -131,20 +131,31 @@ class CryptoMaster(object):
 
     def handle_cluster_job(self, target):
         print("--------Handle Cluster Job--------")
-        nearest_viewpoint = self.find_nearest_viewpoint(
+        nearest_viewpoints = self.find_nearest_viewpoints(
             target, self.robot_location)
 
-        # Should be 14 cm away
-        approached_target = get_approached_viewpoint(
-            nearest_viewpoint, target, 0.35)
+        succeded = False
+        viewpoint_ix = 0
 
-        print("Aproached target: ", approached_target)
+        while not succeded and viewpoint_ix < len(nearest_viewpoints):
+            print("Trying viewpoint with index: ", viewpoint_ix)
+            nearest_viewpoint = nearest_viewpoints[viewpoint_ix]
+            approached_target = get_approached_viewpoint(
+                nearest_viewpoint, target, 0.35)
 
-        quaternion_ros, q = quaternion_between(
-            target, approached_target)
-        _, rotated_quat = rotate_quaternion(q,90)
-        
-        _ = self.move_to_point(approached_target, quaternion=rotated_quat)
+            print("Aproached target: ", approached_target)
+
+            quaternion_ros, q = quaternion_between(
+                target, approached_target)
+            _, rotated_quat = rotate_quaternion(q, 90)
+
+            approach_status = self.move_to_point(approached_target, quaternion=rotated_quat)
+
+            if approach_status == 'SUCCEEDED':
+                succeded = True
+
+            viewpoint_ix += 1
+
 
         print("Moved to approached target!")
         self.state = states.CIRCLE_APPROACHED
@@ -153,7 +164,7 @@ class CryptoMaster(object):
         self.circles_detected += 1
         self.cylinder_approached_handler()
 
-    def find_nearest_viewpoint(self, circle_target, robot_location):
+    def find_nearest_viewpoints(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")
         distance_to_circle = point_distance(circle_target, robot_location)
 
@@ -163,11 +174,12 @@ class CryptoMaster(object):
 
         print("Got request for nearest point to circle: {}".format(circle_target))
 
-        nearest_viewpoint = min(
-            candidate_viewpoints, key=lambda goal: point_distance(goal, circle_target))
 
-        print("Calculated viewpoint at: {}".format(nearest_viewpoint))
-        return nearest_viewpoint
+        by_dist = sorted(candidate_viewpoints, key=lambda goal: point_distance(goal, circle_target))
+
+        print(by_dist)
+
+        return by_dist
 
     def map_callback(self, data):
         print("--------Map callback--------")
