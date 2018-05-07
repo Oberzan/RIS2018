@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import Point, Vector3, Pose
 from util import point_distance
 from data import ClusterPoint
+import states as states
 
 
 class Clusterer():
@@ -15,6 +16,7 @@ class Clusterer():
         self.min_center_distance = min_center_detections
         self.jobs = []
         self.jobs_created = 0
+        self.state = states.DEFAULT
 
         self.visualization_colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
             255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
@@ -23,6 +25,9 @@ class Clusterer():
             'markers', MarkerArray, queue_size=1000)
 
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
+
+    def change_state(self,state):
+        self.state = state
 
     def has_pending_jobs(self):
         return len(self.jobs) > 0
@@ -33,6 +38,8 @@ class Clusterer():
         return job
 
     def point_callback(self, p):
+        if self.state != states.OBSERVING:
+            return
         closest_center = None
         min_dist = 999999999
         min_ix = 0
