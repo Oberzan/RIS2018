@@ -17,6 +17,7 @@
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "geometry_msgs/PointStamped.h"
+#include "geometry_msgs/Point.h"
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/filters/statistical_outlier_removal.h>
@@ -74,9 +75,9 @@ std::vector<pcl::PointIndices> RegionGrowingRGB(
   pcl::RegionGrowingRGB<PointT, pcl::Normal> reg;
   reg.setInputCloud(cloud);
   reg.setSearchMethod(tree);
-  reg.setDistanceThreshold(0.05);
-  reg.setPointColorThreshold(6);
-  reg.setRegionColorThreshold(5);
+  reg.setDistanceThreshold(0.1);
+  reg.setPointColorThreshold(15);
+  reg.setRegionColorThreshold(10);
   reg.setMinClusterSize(50);
   reg.setNumberOfNeighbours(30);
   reg.setInputNormals(cloud_normals);
@@ -187,6 +188,14 @@ void publishMarker(
   marker.lifetime = ros::Duration();
 
   pubm.publish(marker);
+
+  geometry_msgs::Point point;
+  point.x=point_map.point.x;
+  point.y=point_map.point.y;
+  point.z=point_map.point.z;
+
+  pubx.publish(point);
+  
 }
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
@@ -283,6 +292,8 @@ int main(int argc, char **argv)
   puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
 
   pubm = nh.advertise<visualization_msgs::Marker>("detected_cylinder", 1);
+
+  pubx = nh.advertise<geometry_msgs::Point>("cluster/point", 100);
 
   // Spin
   ros::spin();
