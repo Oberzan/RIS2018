@@ -6,7 +6,7 @@ class HandManipulator(object):
 
     def __init__(self):
         ## Grip values
-        self.GRIP_OPEN_VALUE = 0.4
+        self.GRIP_OPEN_VALUE = 0.3
         self.GRIP_CLOSED_VALUE = 1.0
 
         ## Coin join value
@@ -14,17 +14,18 @@ class HandManipulator(object):
 
         ## Hand positions
         # Standby
-        self.STANDBY_POSITION = [-0.2, 2, -2, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
-        self.STANDBY_POSITION_UPPER = [-0.2, 2, -1.5, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
+        self.STANDBY_POSITION =         [-0.2, 2, -2, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
+        self.STANDBY_POSITION_UPPER =   [-0.2, 2, -1.2  , -1.5, -0.1, self.GRIP_CLOSED_VALUE]
 
         # Grabing positions
-        self.GRAB_POSITION_UPPER = [-1.7, 2, -1.5, -1.5, -0.1, self.GRIP_OPEN_VALUE]
-        self.GRAB_POSITION = [-1.7, 1.5, -1.8, -1.2, -0.1, self.GRIP_OPEN_VALUE]
-        self.COIN_GRABBED_POSITION = [-1.7, 1.5, -1.8, -1.2, -0.1, self.GRIP_CLOSED_VALUE]
+        self.GRAB_POSITION_UPPER_OPEN = [-1.7, 2, -1.2, -1.5, -0.1, self.GRIP_OPEN_VALUE]
+        self.GRAB_POSITION =            [-1.7, 1.6, -1.8, -1.1, -0.1, self.GRIP_OPEN_VALUE]
+        self.COIN_GRABBED_POSITION =    [-1.7, 1.6, -1.8, -1.1, -0.1, self.GRIP_CLOSED_VALUE]
+        self.GRAB_POSITION_UPPER_CLOSED = [-1.7, 2, -1.2, -1.5, -0.1, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
-        self.DROP_POSITION_CLOSED = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_CLOSED_VALUE]
-        self.DROP_POSITION_OPEN = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_OPEN_VALUE]
+        self.DROP_POSITION_CLOSED =     [1.5, 0.5, -0.5, 0, -0.1, self.GRIP_CLOSED_VALUE]
+        self.DROP_POSITION_OPEN =       [1.5, 0.5, -0.5, 0, -0.1, self.GRIP_OPEN_VALUE]
 
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
@@ -39,19 +40,19 @@ class HandManipulator(object):
 
     def grab_coin(self, index):
         coin_joint_positions = {
-            0: self.COIN_1_JOINT_POSITION,
-            1: self.COIN_1_JOINT_POSITION + 0.25,
-            2: self.COIN_1_JOINT_POSITION + 0.5
+            0: self.COIN_1_JOINT_POSITION + 1.0,
+            1: self.COIN_1_JOINT_POSITION + 0.55,
+            2: self.COIN_1_JOINT_POSITION
         }
 
         joint_position_value = coin_joint_positions.get(index)
 
         print("Moving to grab coin position")
         self.move_arm_to(self.STANDBY_POSITION_UPPER)
-        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER, joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER_OPEN, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.GRAB_POSITION, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.COIN_GRABBED_POSITION, joint_position_value))
-        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER, joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.GRAB_POSITION_UPPER_CLOSED, joint_position_value))
         print("Coin grabbed")
 
     def move_arm_to(self, data, sleep_duration=2):
