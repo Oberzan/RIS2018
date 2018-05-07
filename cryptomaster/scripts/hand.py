@@ -23,15 +23,15 @@ class HandManipulator(object):
         self.COIN_GRABBED_POSITION = [-1.7, 1.5, -1.8, -1.2, -0.1, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
-        self.DROP_POSITOION_CLOSED = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_CLOSED_VALUE]
-        self.DROP_POSITOION_OPEN = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_OPEN_VALUE]
+        self.DROP_POSITION_CLOSED = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_CLOSED_VALUE]
+        self.DROP_POSITION_OPEN = [1.5, 0.5, -0.5, 0, 1.4, self.GRIP_OPEN_VALUE]
 
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
 
     def drop_coin(self):
-        self.move_arm_to(self.DROP_POSITOION_CLOSED)
-        self.move_arm_to(self.DROP_POSITOION_OPEN)
+        self.move_arm_to(self.DROP_POSITION_CLOSED)
+        self.move_arm_to(self.DROP_POSITION_OPEN)
         self.move_to_standby()
 
     def move_to_standby(self):
