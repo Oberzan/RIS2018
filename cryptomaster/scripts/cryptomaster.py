@@ -20,6 +20,7 @@ from cluster import Clusterer
 from std_msgs.msg import String
 from std_msgs.msg import Int8
 from hand import HandManipulator
+from tf.transformations import quaternion_from_euler
 
 
 class CryptoMaster(object):
@@ -58,7 +59,8 @@ class CryptoMaster(object):
             'cmd_vel_mux/input/navi', Twist, queue_size=10)
         self.speaker_publisher = rospy.Publisher(
             "speaker/say", String, queue_size=10)
-        self.engine_state_publisher = rospy.Publisher("engine/status", String, queue_size=10)
+        self.engine_state_publisher = rospy.Publisher(
+            "engine/status", String, queue_size=10)
 
     def map_state_handler(self):
         print("Waiting for map_callback...")
@@ -80,7 +82,7 @@ class CryptoMaster(object):
                 state_handler()
             else:
                 print("UNKNOWN STATE: ", self.state)
-            
+
             while self.clusterer.has_pending_jobs():
                 circle_target = self.clusterer.get_next_job()
                 self.handle_cluster_job(circle_target)
@@ -132,21 +134,17 @@ class CryptoMaster(object):
         nearest_viewpoint = self.find_nearest_viewpoint(
             target, self.robot_location)
 
-        quaternion_ros, quaternion = quaternion_between(target, nearest_viewpoint)
-        _ = self.move_to_point(nearest_viewpoint, quaternion=quaternion_ros)
-        print("Moved to viewpoint!")
-
-        ## Should be 14 cm away
+        # Should be 14 cm away
         approached_target = get_approached_viewpoint(
-            nearest_viewpoint, target, 0.7)
+            nearest_viewpoint, target, 0.35)
 
         print("Aproached target: ", approached_target)
 
-        ## Rotate for 90 degrees to throw in the coin
-        new_orientation, new_quaternion_ros = rotate_quaternion(quaternion, 90)
-        print("New orientation: ", new_orientation)
-
-        _ = self.move_to_point(approached_target, quaternion=new_quaternion_ros)
+        quaternion_ros, q = quaternion_between(
+            target, approached_target)
+        _, rotated_quat = rotate_quaternion(q,90)
+        
+        _ = self.move_to_point(approached_target, quaternion=rotated_quat)
 
         print("Moved to approached target!")
         self.state = states.CIRCLE_APPROACHED
@@ -215,7 +213,7 @@ class CryptoMaster(object):
         _, size_y = self.cv_map.shape
         transformed = Point(point.x * self.map_resolution + self.map_transform.position.x,
                             (size_y - point.y) * self.map_resolution + (
-                                    self.map_transform.position.y * self.map_resolution * 2), 0)
+                                self.map_transform.position.y * self.map_resolution * 2), 0)
         return transformed
 
     def say(self, data, sleep_duration=1):
@@ -229,6 +227,8 @@ class CryptoMaster(object):
 def main(args):
     crypto_robot = CryptoMaster()
     crypto_robot.run_robot()
+    # crypto_robot.hand_manipulator.grab_coin(0)
+    # crypto_robot.hand_manipulator.drop_coin()
 
 
 if __name__ == '__main__':
