@@ -17,7 +17,7 @@ class HandManipulator(object):
         print(self.mappings)
 
         ## Grip values
-        self.GRIP_OPEN_VALUE = 0
+        self.GRIP_OPEN_VALUE = 0.3
         self.GRIP_CLOSED_VALUE = 1
 
         ## Coin join value
@@ -29,8 +29,8 @@ class HandManipulator(object):
 
         # Grabing positions
         self.ABOVE_COIN_OPEN =          [0, 0.7, 0.3, 0.13, 0.5, self.GRIP_OPEN_VALUE]
-        self.GRAB_POSITION =            [0, 0.57, 0.17, 0.2, 0.5, self.GRIP_OPEN_VALUE]
-        self.GRABBED_POSITION =         [0, 0.57, 0.17, 0.2, 0.5, self.GRIP_CLOSED_VALUE]
+        self.GRAB_POSITION =            [0, 0.57, 0.17, 0.19, 0.5, self.GRIP_OPEN_VALUE]
+        self.GRABBED_POSITION =         [0, 0.57, 0.17, 0.19, 0.5, self.GRIP_CLOSED_VALUE]
         self.ABOVE_COIN_CLOSED =        [0, 0.8, 0.5, 0.7, 0.5, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
@@ -52,8 +52,11 @@ class HandManipulator(object):
 
         return (value * interval_range) + min
 
+    def drop_coin(self):
+        self.move_arm_to(self.DROP_POSITION_CLOSED)
         self.move_arm_to(self.DROP_POSITION_OPEN)
         self.move_to_standby()
+
     def move_to_standby(self):
         self.move_arm_to(self.STANDBY_POSITION)
 

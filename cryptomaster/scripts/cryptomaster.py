@@ -34,9 +34,8 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
         
-        self.hand_manipulator = HandManipulator([joint.dh_min for joint in desc.joints])
+        self.hand_manipulator = HandManipulator()
         self.clusterer = Clusterer(min_center_detections=15)
         self.cv_map = None
         self.map_transform = None
@@ -87,6 +86,9 @@ class CryptoMaster(object):
                 print("UNKNOWN STATE: ", self.state)
 
             while self.clusterer.has_pending_jobs():
+                if self.circles_detected == NUM_CIRCLES_TO_DETECT:
+                    break
+
                 circle_target = self.clusterer.get_next_job()
                 self.handle_cluster_job(circle_target)
 
@@ -168,7 +170,7 @@ class CryptoMaster(object):
                 _, rotated_quat = rotate_quaternion(q, 90)
 
                 approached_target = get_approached_viewpoint(
-                    approached_target, improved_cluster, 0.315)
+                    approached_target, improved_cluster, 0.305)
 
                 self.move_to_point(approached_target, quaternion=rotated_quat)
 
