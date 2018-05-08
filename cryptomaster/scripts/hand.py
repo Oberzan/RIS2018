@@ -3,12 +3,10 @@ from std_msgs.msg import Float32MultiArray
 from openservorobot.msg import ManipulatorDescriptionM
 
 
-
 class HandManipulator(object):
 
     def __init__(self):
-        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
-
+        desc = rospy.wait_for_message("openservorobot/manipulator_description", ManipulatorDescriptionM)
 
         self.mappings = {}
         for joint_index, joint in enumerate(desc.joints):
@@ -28,22 +26,20 @@ class HandManipulator(object):
 
         ## Hand positions
         # Standby
-        self.STANDBY_POSITION =         [0.2, 0.8, 0.5, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
+        self.STANDBY_POSITION = [0.2, 0.8, 0.5, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
 
         # Grabing positions
-        self.ABOVE_COIN_OPEN =          [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_OPEN_VALUE]
-        self.GRAB_POSITION =            [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_OPEN_VALUE]
-        self.GRABBED_POSITION =         [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_CLOSED_VALUE]
-        self.ABOVE_COIN_CLOSED =        [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_OPEN = [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_OPEN_VALUE]
+        self.GRAB_POSITION = [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_OPEN_VALUE]
+        self.GRABBED_POSITION = [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_CLOSED = [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
-        self.DROP_POSITION_CLOSED =     [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_CLOSED_VALUE]
-        self.DROP_POSITION_OPEN =       [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_OPEN_VALUE]
+        self.DROP_POSITION_CLOSED = [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_CLOSED_VALUE]
+        self.DROP_POSITION_OPEN = [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_OPEN_VALUE]
 
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
-
-
 
     def map_to_bounds(self, joint_index, value):
 
@@ -56,11 +52,8 @@ class HandManipulator(object):
 
         return (value * interval_range) + min
 
-
-    
-    def sum(self,positions):
-        return [x + y for x,y in zip(self.mins,positions)]
-        
+    def sum(self, positions):
+        return [x + y for x, y in zip(self.mins, positions)]
 
     def drop_coin(self):
         self.move_arm_to(self.DROP_POSITION_CLOSED)
@@ -82,7 +75,7 @@ class HandManipulator(object):
         print("Moving to grab coin position")
         self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_OPEN, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.GRAB_POSITION, joint_position_value))
-        self.move_arm_to(self.with_coin_value(self.GRABBED_POSITION,        joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.GRABBED_POSITION, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_CLOSED, joint_position_value))
         print("Coin grabbed")
 
