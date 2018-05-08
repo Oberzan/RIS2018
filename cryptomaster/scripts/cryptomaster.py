@@ -21,6 +21,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Int8
 from hand import HandManipulator
 from tf.transformations import quaternion_from_euler
+from openservorobot.msg import ManipulatorDescriptionM
 
 
 class CryptoMaster(object):
@@ -33,7 +34,9 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        self.hand_manipulator = HandManipulator()
+        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
+        
+        self.hand_manipulator = HandManipulator([joint.dh_min for joint in desc.joints])
         self.clusterer = Clusterer(min_center_detections=15)
         self.cv_map = None
         self.map_transform = None
