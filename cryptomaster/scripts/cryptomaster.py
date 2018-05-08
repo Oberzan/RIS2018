@@ -254,7 +254,12 @@ def main(args):
     crypto_robot = CryptoMaster()
     crypto_robot.hand_manipulator.move_to_standby()
     crypto_robot.run_robot()
-
+    # crypto_robot.hand_manipulator.grab_coin(0)
+    # crypto_robot.hand_manipulator.drop_coin()
+    # crypto_robot.hand_manipulator.grab_coin(1)
+    # crypto_robot.hand_manipulator.drop_coin()
+    # crypto_robot.hand_manipulator.grab_coin(2)
+    # crypto_robot.hand_manipulator.drop_coin()
 
 if __name__ == '__main__':
     main(sys.argv)
