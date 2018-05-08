@@ -6,23 +6,19 @@ from openservorobot.msg import ManipulatorDescriptionM
 
 class HandManipulator(object):
 
-    def __init__(self,joint_minimums=(0,0,0,0,0,0)):
-
-
+    def __init__(self):
         desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
 
 
         self.mappings = {}
         for joint_index, joint in enumerate(desc.joints):
             print(joint)
-            self.mappings[joint_index]['min'] = joint.dh_min
-            self.mappings[joint_index]['max'] = joint.dh_max
+            self.mappings[joint_index] = {}
+            self.mappings[joint_index]['joint_min'] = joint.dh_min
+            self.mappings[joint_index]['joint_max'] = joint.dh_max
 
         print(self.mappings)
 
-
-
-        self.mins = joint_minimums
         ## Grip values
         self.GRIP_OPEN_VALUE = 0
         self.GRIP_CLOSED_VALUE = 1
@@ -53,8 +49,8 @@ class HandManipulator(object):
 
         joint_values = self.mappings[joint_index]
 
-        min = joint_values['min']
-        max = joint_values['max']
+        min = joint_values['joint_min']
+        max = joint_values['joint_max']
 
         interval_range = max - min
 
