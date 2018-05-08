@@ -1,34 +1,66 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
+from openservorobot.msg import ManipulatorDescriptionM
+
 
 
 class HandManipulator(object):
 
     def __init__(self,joint_minimums=(0,0,0,0,0,0)):
+
+
+        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
+
+
+        self.mappings = {}
+        for joint_index, joint in enumerate(desc.joints):
+            print(joint)
+            self.mappings[joint_index]['min'] = joint.dh_min
+            self.mappings[joint_index]['max'] = joint.dh_max
+
+        print(self.mappings)
+
+
+
         self.mins = joint_minimums
         ## Grip values
-        self.GRIP_OPEN_VALUE = 0.8
-        self.GRIP_CLOSED_VALUE = 1.5
+        self.GRIP_OPEN_VALUE = 0
+        self.GRIP_CLOSED_VALUE = 1
 
         ## Coin join value
         self.COIN_1_JOINT_POSITION = 0.24
 
         ## Hand positions
         # Standby
-        self.STANDBY_POSITION =         [1.74, 2.25, 0.5, 0.13, 1.68, self.GRIP_CLOSED_VALUE]
+        self.STANDBY_POSITION =         [0.2, 0.8, 0.5, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
 
         # Grabing positions
-        self.ABOVE_COIN_OPEN =          [0.24, 2.25, 1.3, 0.13, 1.68, self.GRIP_OPEN_VALUE]
-        self.GRAB_POSITION =            [0.24, 1.85, 0.7, -1.1, 1.68, self.GRIP_OPEN_VALUE]
-        self.GRABBED_POSITION =         [0.24, 1.85, 0.7, -1.1, 1.68, self.GRIP_CLOSED_VALUE]
-        self.ABOVE_COIN_CLOSED =        [0.24, 2.25, 1.3, 0.13, 1.68, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_OPEN =          [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_OPEN_VALUE]
+        self.GRAB_POSITION =            [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_OPEN_VALUE]
+        self.GRABBED_POSITION =         [0.24, 0.7, 0.7, 0.2, 0.8, self.GRIP_CLOSED_VALUE]
+        self.ABOVE_COIN_CLOSED =        [0.24, 0.8, 0.7, 0.13, 0.8, self.GRIP_CLOSED_VALUE]
 
         # Dropping positions
-        self.DROP_POSITION_CLOSED =     [3.44, 0.75, 2, 0, 1.68, self.GRIP_CLOSED_VALUE]
-        self.DROP_POSITION_OPEN =       [3.44, 0.75, 2, 0, 1.68, self.GRIP_OPEN_VALUE]
+        self.DROP_POSITION_CLOSED =     [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_CLOSED_VALUE]
+        self.DROP_POSITION_OPEN =       [0.99, 0.75, 0.8, 0, 0.8, self.GRIP_OPEN_VALUE]
 
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
+
+
+
+    def map_to_bounds(self, joint_index, value):
+
+        joint_values = self.mappings[joint_index]
+
+        min = joint_values['min']
+        max = joint_values['max']
+
+        interval_range = max - min
+
+        return (value * interval_range) + min
+
+
     
     def sum(self,positions):
         return [x + y for x,y in zip(self.mins,positions)]
@@ -59,10 +91,15 @@ class HandManipulator(object):
         print("Coin grabbed")
 
     def move_arm_to(self, data, sleep_duration=2):
+        new_data = []
+
+        for value, joint_index in data:
+            new_data.append(self.map_to_bounds(joint_index, value))
+
         print("----------Hand Manipulator Publish Data----------")
-        print("Posting data: ", self.sum(data))
+        print("Posting data: ", new_data)
         arr = Float32MultiArray()
-        arr.data = self.sum(data)
+        arr.data = new_data
         self.position_publisher.publish(arr)
         rospy.sleep(sleep_duration)
 
