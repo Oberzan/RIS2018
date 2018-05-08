@@ -3,12 +3,10 @@ from std_msgs.msg import Float32MultiArray
 from openservorobot.msg import ManipulatorDescriptionM
 
 
-
 class HandManipulator(object):
 
     def __init__(self):
-        desc = rospy.wait_for_message("openservorobot/manipulator_description",ManipulatorDescriptionM)
-
+        desc = rospy.wait_for_message("openservorobot/manipulator_description", ManipulatorDescriptionM)
 
         self.mappings = {}
         for joint_index, joint in enumerate(desc.joints):
@@ -43,8 +41,6 @@ class HandManipulator(object):
         ## Position publisher
         self.position_publisher = rospy.Publisher("set_manipulator", Float32MultiArray, queue_size=10)
 
-
-
     def map_to_bounds(self, joint_index, value):
 
         joint_values = self.mappings[joint_index]
@@ -56,17 +52,8 @@ class HandManipulator(object):
 
         return (value * interval_range) + min
 
-    
-    def sum(self,positions):
-        return [x + y for x,y in zip(self.mins,positions)]
-        
-
-    def drop_coin(self):
-        self.move_arm_to(self.ABOVE_DROP_POSITION)
-        self.move_arm_to(self.DROP_POSITION_CLOSED)
         self.move_arm_to(self.DROP_POSITION_OPEN)
         self.move_to_standby()
-
     def move_to_standby(self):
         self.move_arm_to(self.STANDBY_POSITION)
 
@@ -82,7 +69,7 @@ class HandManipulator(object):
         print("Moving to grab coin position")
         self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_OPEN, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.GRAB_POSITION, joint_position_value))
-        self.move_arm_to(self.with_coin_value(self.GRABBED_POSITION,        joint_position_value))
+        self.move_arm_to(self.with_coin_value(self.GRABBED_POSITION, joint_position_value))
         self.move_arm_to(self.with_coin_value(self.ABOVE_COIN_CLOSED, joint_position_value))
         print("Coin grabbed")
 
