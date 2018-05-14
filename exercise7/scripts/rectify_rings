@@ -53,8 +53,6 @@ class The_Rectifier:
         # Set the dimensions of the image
         self.dims = cv_image.shape
 
-        self.cropImage(cv_image, 120, 320)
-
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
 
@@ -66,62 +64,66 @@ class The_Rectifier:
 
         candidates = self.find_candidates(contoura)
 
+        for c in candidates:
+            e1 = c[0]
+            e2 = c[1]
+
+            size = (e1[1][0] + e1[1][1]) / 2
+            center = (e1[0][0], e1[0][1])
+
+            x1 = int(center[0] - size / 2)
+            x2 = int(center[0] + size / 2)
+
+            x_min = x1 if x1 > 0 else 0
+            x_max = x2 if x2 < cv_image.shape[0] else cv_image.shape[0]
+
+            y1 = int(center[1] - size / 2)
+            y2 = int(center[1] + size / 2)
+
+            y_min = y1 if y1 > 0 else 0
+            y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
+            print(x_min)
+            print(x_max)
+            print(y_min)
+            print(y_max)
+
         ###########################################
         # THIS IS THE CODE THAT IT IS RELEVANT TO YOU
         # IT SHOULD BE INCLUDED IN YOUR OWN FUNCTION FOR RING DETECTION
         ###########################################
 
         if len(candidates) == 1:
-            print('Ring detected! (hopefully)')
-            corners, ids, rejected_corners = cv2.aruco.detectMarkers(
-                cv_image, dictm, parameters=params)
-
-            # Increase proportionally if you want a larger image
             image_size = (351*2, 248*2, 3)
-            marker_side = 50*2
 
             img_out = np.zeros(image_size, np.uint8)
-            out_pts = np.array([[marker_side/2, img_out.shape[0]-marker_side/2],
-                                [img_out.shape[1]-marker_side/2,
-                                    img_out.shape[0]-marker_side/2],
-                                [marker_side/2, marker_side/2],
-                                [img_out.shape[1]-marker_side/2, marker_side/2]])
+            width = img_out.shape[1]
+            height = img_out.shape[0]
+            out_pts = np.array([[width/2,                    30],
+                                [0,                        height/2],
+                                [width/2,                    height-30],
+                                [width-0,                   height/2]])
 
-            src_points = np.zeros((4, 2))
-            cens_mars = np.zeros((4, 2))
+            src_points = np.zeros((4, 2), dtype=np.int32)
 
-            if not ids is None:
-                if len(ids) == 4:
-                    print('4 Markers detected')
+            src_points[0] = [int(center[0]), y_min]
+            src_points[1] = [x_min, int(center[1])]
+            src_points[2] = [int(center[0]), y_max]
+            src_points[3] = [x_max,int(center[1])]
 
-                    for idx in ids:
-                        # Calculate the center point of all markers
-                        cors = np.squeeze(corners[idx[0]-1])
-                        cen_mar = np.mean(cors, axis=0)
-                        cens_mars[idx[0]-1] = cen_mar
-                        cen_point = np.mean(cens_mars, axis=0)
+            cv2.circle(cv_image,tuple(src_points[0]),1,(0,0,255),-1)
+            cv2.circle(cv_image,tuple(src_points[1]),1,(0,0,255),-1)
+            cv2.circle(cv_image,tuple(src_points[2]),1,(0,0,255),-1)
+            cv2.circle(cv_image,tuple(src_points[3]),1,(0,0,255),-1)
 
-                    for coords in cens_mars:
-                        #  Map the correct source points
-                        if coords[0] < cen_point[0] and coords[1] < cen_point[1]:
-                            src_points[2] = coords
-                        elif coords[0] < cen_point[0] and coords[1] > cen_point[1]:
-                            src_points[0] = coords
-                        elif coords[0] > cen_point[0] and coords[1] < cen_point[1]:
-                            src_points[3] = coords
-                        else:
-                            src_points[1] = coords
+            print(src_points)
+            print(out_pts)
 
-                    h, status = cv2.findHomography(src_points, out_pts)
-                    img_out = cv2.warpPerspective(
-                        cv_image, h, (img_out.shape[1], img_out.shape[0]))
+            h, status = cv2.findHomography(src_points, out_pts)
+            img_out = cv2.warpPerspective(
+                cv_image, h, (img_out.shape[1], img_out.shape[0]))
 
-                    cv2.imshow('Warped image', img_out)
-                    cv2.waitKey(1)
-                else:
-                    print('The number of markers is not ok:', len(ids))
-            else:
-                 print('No markers found')
+            cv2.imshow('Warped image', img_out)
+            cv2.waitKey(1)
 
         elif len(candidates) == 0:
             print('No contours detected')
@@ -134,7 +136,6 @@ class The_Rectifier:
                 cv2.ellipse(cv_image, e2, (0, 255, 0), 3)
             # cv2.imshow('Image',cv_image)
             # cv2.waitKey(1)
-
 
     def find_candidates(self, contours):
         elps = [cv2.fitEllipse(cnt) for cnt in contours if cnt.shape[0] >= 20]
@@ -152,7 +153,7 @@ class The_Rectifier:
             abs(minoraxis1/majoraxis2-1) < 0.65 and
             abs(majoraxis1/minoraxis2-1) < 0.35 and
             20 < minoraxis1 < 85 and
-            np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
+                np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
             print(abs(majoraxis1/majoraxis2-1))
             print(abs(minoraxis1/minoraxis2-1))
             print(abs(minoraxis1/majoraxis2-1))
