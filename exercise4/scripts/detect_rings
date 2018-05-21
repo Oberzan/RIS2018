@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import math
-# roslib.load_manifest('exercise4')
 import sys
-
 import cv2
 import numpy as np
-import roslib
 import rospy
-import tf
-import tf2_geometry_msgs
 import tf2_ros
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
@@ -20,9 +14,11 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 
 class The_Ring:
+
     def __init__(self):
         rospy.init_node('image_converter', anonymous=True)
         self.engine_state = "default"
+
 
         # An object we use for converting images between ROS format and OpenCV format
         self.bridge = CvBridge()
@@ -144,7 +140,7 @@ class The_Ring:
             e2 = c[1]
 
             size = (e1[1][0] + e1[1][1]) / 2
-            center = (e1[0][1], e1[0][0])
+            center = (e1[0][0], e1[0][1])
 
             x1 = int(center[0] - size / 2)
             x2 = int(center[0] + size / 2)
@@ -164,8 +160,44 @@ class The_Ring:
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
 
-        cv2.imshow("Image", cv_image)
-        cv2.waitKey(1)
+            warped_image = self.warp_circle(cv_image, center, (y_min, y_max, x_min, x_max))
+
+            cv2.imshow('Warped image', warped_image)
+            cv2.waitKey(1)
+
+        ## cv2.imshow("Image", cv_image)
+        ## cv2.waitKey(1)
+
+
+    def warp_circle(self, cv_image, elipse_center, circle_bounding_points):
+        output_image_size = (351 * 2, 248 * 2, 3)
+        img_out = np.zeros(output_image_size, np.uint8)
+        width = img_out.shape[1]
+        height = img_out.shape[0]
+
+        out_bounding_points = np.array([[width / 2, 30],
+                                        [0, height / 2],
+                                        [width / 2, height - 30],
+                                        [width - 0, height / 2]])
+
+        src_points = np.zeros((4, 2), dtype=np.int32)
+
+        y_min, y_max, x_min, x_max = circle_bounding_points
+
+
+        src_points[0] = [int(elipse_center[0]), y_min]
+        src_points[1] = [x_min, int(elipse_center[1])]
+        src_points[2] = [int(elipse_center[0]), y_max]
+        src_points[3] = [x_max, int(elipse_center[1])]
+
+        h, status = cv2.findHomography(src_points, out_bounding_points)
+        img_out = cv2.warpPerspective(
+            cv_image, h, (img_out.shape[1], img_out.shape[0]))
+
+        return img_out
+
+
+
 
     def find_candidates(self, contours):
         elps = [cv2.fitEllipse(cnt) for cnt in contours if cnt.shape[0] >= 20]
@@ -174,17 +206,6 @@ class The_Ring:
             for m in range(n + 1, len(elps)):
                 candidates += self.isCircle2(elps[n], elps[m])
         return candidates
-
-    def isCircle(self, e1, e2):
-        (x1, y1), (majoraxis1, minoraxis1), angle1 = e1
-        (x2, y2), (majoraxis2, minoraxis2), angle2 = e2
-        center_to_center_distance = np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2))
-        majoraxisdiff = abs(majoraxis1 - majoraxis2)
-        minoraxisdiff = abs(minoraxis1 - minoraxis2)
-        if (center_to_center_distance < 5 and
-            10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
-            return [(e1, e2)]
-        return []
 
     def isCircle2(self, e1, e2):
         (x1, y1), (minoraxis1, majoraxis1), angle1 = e1
