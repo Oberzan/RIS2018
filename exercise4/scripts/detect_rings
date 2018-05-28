@@ -210,7 +210,9 @@ class The_Ring:
             return None
         data = decodedObjects[0].data
         points = data.split(";")
-        xy = [point.split("_") for point in points]
+        xy = [map(float, point.split("_")) for point in points]
+
+
         print("---------QR DETECTED---------")
         return {"k": None, "points": xy}
 
