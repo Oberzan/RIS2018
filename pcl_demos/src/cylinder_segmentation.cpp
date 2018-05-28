@@ -18,17 +18,21 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Point.h"
+#include "std_msgs/String.h"
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/segmentation/region_growing_rgb.h>
+#include <string>
 
 ros::Publisher pubx;
 ros::Publisher puby;
 ros::Publisher pubm;
 
 tf2_ros::Buffer tf2_buffer;
+
+std::string engine_state = "default";
 
 typedef pcl::PointXYZRGB PointT;
 
@@ -200,6 +204,8 @@ void publishMarker(
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 {
+  //std::cerr << engine_state << std::endl;
+  if(engine_state!="observing") return;
   geometry_msgs::TransformStamped tss;
   try{
      tss = tf2_buffer.lookupTransform("map", "camera_rgb_optical_frame", ros::Time(0));
@@ -276,6 +282,12 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   }
 }
 
+void engine_state_callback(const std_msgs::String::ConstPtr& message)
+{
+  engine_state = (*message).data;
+  std::cerr << engine_state << std::endl;
+}
+
 int main(int argc, char **argv)
 {
   // Initialize ROS
@@ -287,6 +299,8 @@ int main(int argc, char **argv)
 
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
+
+  ros::Subscriber engine_state_sub = nh.subscribe("engine/status",1, engine_state_callback);
 
   // Create a ROS publisher for the output point cloud
   puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
