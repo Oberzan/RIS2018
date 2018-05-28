@@ -118,12 +118,13 @@ class The_Ring:
 
         if data:
             points = data.get('points')
-
-            geometry_points = [Point(p[0], p[1], 0) for p in points]
-            marker.points = geometry_points
+            if points:
+                geometry_points = [Point(p[0], p[1], 0) for p in points]
+                marker.points = geometry_points
+            else:
+                print("No points?")
 
             k = data.get('k')
-
             if k:
                 marker.text = str(k)
 
