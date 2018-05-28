@@ -210,20 +210,13 @@ class The_Ring:
             return None
         data = decodedObjects[0].data
         points = data.split(";")
-        xy = [map(float, point.split("_")) for point in points]
+        xy = np.array([map(float, point.split("_")) for point in points])
 
+        x = xy[:, 0]
+        y = xy[:, 1]
+        [k, _] = np.polyfit(x, y, 1)
 
         print("---------QR DETECTED---------")
-
-
-        x = [arr[0] for arr in xy]
-        y = [arr[1] for arr in xy]
-
-
-        k, n = np.polyfit(x, y, 1)
-
-        print(k, n)
-
         return {"k": k, "points": xy}
 
     def extract_digits(self, warped_image):
