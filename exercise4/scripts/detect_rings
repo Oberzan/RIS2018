@@ -61,7 +61,7 @@ class The_Ring:
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
         self.cluster_publisher = rospy.Publisher(
-            'cluster/point', Point, queue_size=1000)
+            'cluster/point', Marker, queue_size=1000)
 
         # Subscriber to get state of our main engine
         self.engine_state_subscriber = rospy.Subscriber(
@@ -81,7 +81,7 @@ class The_Ring:
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
         return (x, y)
 
-    def post_position(self, x, y, color=ColorRGBA(0, 0, 0, 0.9)):
+    def post_position(self, x, y, color=ColorRGBA(0, 0, 0, 0.9), data=None):
         # Define a stamped message for transformation
         point_s = PointStamped()
         point_s.point.x = x
@@ -115,8 +115,20 @@ class The_Ring:
         marker.id = self.marker_num
         marker.scale = Vector3(0.1, 0.1, 0.1)
         marker.color = color
-        self.marker_array.markers.append(marker)
 
+        if data:
+            points = data.get('points')
+
+            geometry_points = [Point(p[0], p[1], 0) for p in points]
+            marker.points = geometry_points
+
+            k = data.get('k')
+
+            if k:
+                marker.text = str(k)
+
+
+        self.marker_array.markers.append(marker)
         self.cluster_publisher.publish(marker)
         self.markers_pub.publish(self.marker_array)
 
@@ -167,13 +179,12 @@ class The_Ring:
             warped_image = self.warp(circles, cv_image)
             if not warped_image is None:
                 circle_color = self.circle_color(warped_image)
-                # print(circle_color)
-                self.extract_data(warped_image)
-                # self.post_position(x,y,circle_color)
+                data = self.extract_data(warped_image)
+                self.post_position(x, y, circle_color, data)
                 cv2.imshow('Warped image', warped_image)
                 cv2.waitKey(1)
-            # else:
-            # self.post_position(x,y)
+            else:
+                self.post_position(x,y)
 
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
@@ -217,7 +228,7 @@ class The_Ring:
         [k, _] = np.polyfit(x, y, 1)
 
         print("---------QR DETECTED---------")
-        return {"k": k, "points": xy}
+        return {"k": k, "points": list(xy)}
 
     def extract_digits(self, warped_image):
         config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'

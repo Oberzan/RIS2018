@@ -24,7 +24,7 @@ class Clusterer():
         self.markers_pub = rospy.Publisher(
             'markers', MarkerArray, queue_size=1000)
 
-        _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
+        _ = rospy.Subscriber("cluster/point", Marker, self.point_callback)
 
     def change_state(self,state):
         self.state = state
@@ -69,7 +69,10 @@ class Clusterer():
 
         return closest_center, min_ix
 
-    def point_callback(self, p):
+    def point_callback(self, marker):
+        print(marker)
+        p = marker.pose.position
+
         if self.state != states.OBSERVING:
             return
         closest_center = None
