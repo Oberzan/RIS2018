@@ -237,17 +237,27 @@ class The_Ring:
         image = cv2.erode(image, kernel, iterations = 2)
         image = cv2.dilate(image, kernel, iterations = 2)
         (n, out, stats, centers) = cv2.connectedComponentsWithStats(255-image, 4, cv2.CV_32S)
+        if n < 3:
+            return None
         sorted_objects = np.argsort(stats[:,-1])
         l1_ix = sorted_objects[-2]
         l2_ix = sorted_objects[-3]
         if centers[l1_ix][1] > centers[l2_ix][1]:
             upper_line = out==l2_ix
+            lower_line = out==l1_ix
         else:
             upper_line = out==l1_ix
+            lower_line = out==l2_ix
         
-        true_points = np.where(upper_line)
-        h = len(true_points)
-        line = np.polyfit(true_points[1], h - true_points[0],1)
+        true_points_u = np.where(upper_line)
+        h = len(upper_line)
+        if len(true_points_u[0]) > 3000 or len(true_points_u[0]) < 600 or abs(centers[l1_ix][0] - centers[l2_ix][0]) > 15:
+            return None
+        true_points_l = np.where(lower_line)
+        if len(true_points_l[0]) > 3000 or len(true_points_l[0]) < 600:
+            return None
+
+        line = np.polyfit(true_points[1], h - true_points[0], 1)
         return {"k":line[0],"points":[]}
 
     def warp(self, candidates,cv_image):
