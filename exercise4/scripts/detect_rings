@@ -17,6 +17,8 @@ from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
 from sensor_msgs.msg import Image
 from std_msgs.msg import ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
+from .colorizer import ColorLabeler
+
 
 dictm = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 
@@ -44,6 +46,8 @@ class The_Ring:
 
         # An object we use for converting images between ROS format and OpenCV format
         self.bridge = CvBridge()
+
+        self.color_labeler = ColorLabeler()
 
         # A help variable for holding the dimensions of the image
         self.dims = (0, 0, 0)
@@ -145,6 +149,7 @@ class The_Ring:
 
         #self.cropImage(cv_image, 120, 320)
 
+
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
 
@@ -163,6 +168,8 @@ class The_Ring:
             size = (c[0][1][0] + c[0][1][1]) / 2
             center = (e1[0][1], e1[0][0])
             median, _, _, _, _ = self.calcParameters(size, center,cv_image)
+            circle_color = self.color_labeler.extract_color(cv_image)
+            print(circle_color)
             self.get_pose(e1, float(median) / 1000.0)
 
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
