@@ -2,8 +2,8 @@ from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 import rospy
 from geometry_msgs.msg import Point, Vector3, Pose
-from util import point_distance
-from data import ClusterPoint
+from .util import point_distance
+from .data import ClusterPoint
 import states as states
 
 
@@ -36,6 +36,12 @@ class Clusterer():
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
         return job
+
+    def get_circle_clusters(self):
+        return [center for center in self.centers if center.is_circle]
+
+    def get_cylinder_clusters(self):
+        return [center for center in self.centers if not center.is_circle]
 
 
     def reset_cluster(self, cluster_ix):
