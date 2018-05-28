@@ -18,6 +18,9 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
 
+import pyzbar.pyzbar as pyzbar
+import pytesseract
+
 dictm = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 
 # The object that we will pass to the markerDetect function
@@ -75,17 +78,15 @@ class The_Ring:
 
     def get_pose(self, e, dist):
         # Calculate the position of the detected ellipse
-
         k_f = 525  # kinect focal length in pixels
-
         elipse_x = self.dims[1] / 2 - e[0][0]
         elipse_y = self.dims[0] / 2 - e[0][1]
-
         angle_to_target = np.arctan2(elipse_x, k_f)
-
         # Get the angles in the base_link relative coordinate system
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
+        return (x,y)
 
+    def post_position(self,x,y,color=ColorRGBA(0,0,0,0.9)):
         # Define a stamped message for transformation
         point_s = PointStamped()
         point_s.point.x = x
@@ -106,24 +107,22 @@ class The_Ring:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
-        print("Publishing point to cluster: \n", point_world.point)
-        self.cluster_publisher.publish(point_world.point)
-
         # Create a marker used for visualization
         self.marker_num += 1
         marker = Marker()
         marker.header.stamp = point_world.header.stamp
         marker.header.frame_id = point_world.header.frame_id
         marker.pose = pose
-        marker.type = Marker.CUBE
+        marker.type = Marker.SPHERE
         marker.action = Marker.ADD
         marker.frame_locked = False
         marker.lifetime = rospy.Duration.from_sec(30)
         marker.id = self.marker_num
         marker.scale = Vector3(0.1, 0.1, 0.1)
-        marker.color = ColorRGBA(0, 1, 0, 1)
+        marker.color = color
         self.marker_array.markers.append(marker)
 
+        self.cluster_publisher.publish(marker)
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
@@ -149,21 +148,43 @@ class The_Ring:
 
         circles = self.find_circles(contoura)
 
-        print("Circles: ", len(circles))        
+        print("Circles: ", len(circles))
+
+        for c in circles:
+            e1 = c[0]
+            e2 = c[1]
+            size = (c[0][1][0] + c[0][1][1]) / 2
+            center = (e1[0][1], e1[0][0])
+            x1 = int(center[0] - size / 2)
+            x2 = int(center[0] + size / 2)
+
+            x_min = x1 if x1 > 0 else 0
+            x_max = x2 if x2 < cv_image.shape[0] else cv_image.shape[0]
+
+            y1 = int(center[1] - size / 2)
+            y2 = int(center[1] + size / 2)
+
+            y_min = y1 if y1 > 0 else 0
+            y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
+
+            median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
+            x,y = self.get_pose(e1, float(median) / 1000.0)
+            warped_image = self.warp(circles, cv_image)
+            if not warped_image is None:
+                circle_color = self.circle_color(warped_image)
+                #print(circle_color)
+                self.extract_data(warped_image)
+                #self.post_position(x,y,circle_color)
+                cv2.imshow('Warped image',warped_image[60:-60,:,:])
+                cv2.waitKey(1)
+            #else:
+                #self.post_position(x,y)
+
+            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
+            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
         
         #cv2.imshow('cvimage',cv_image)
         #cv2.waitKey(1)
-        
-        if len(circles)==1:
-            warped_image = self.warp(circles, cv_image)
-            if not warped_image is None:
-                """ print("Saving!")
-                cv2.imwrite('/home/team_eta/ROS/src/images/warped_plot'+str(self.img_id)+'.png',warped_image)
-                rospy.sleep(0.5)
-                self.img_id+=1 """
-                print(self.circle_color(warped_image))
-                cv2.imshow('Warped image',warped_image)
-                cv2.waitKey(1)
 
     def circle_color(self,image):
         topleft = image[0][0]
@@ -172,16 +193,62 @@ class The_Ring:
         bottomright = image[image.shape[0]-1][image.shape[1]-1]
         matrix = np.array([topleft,topright,bottomleft,bottomright])
         means = np.mean(matrix,axis=0)
-        #print(matrix)
-        #print(means)
-        #print(np.argmax(means))
-        # 0 blue
-        # 1 green
-        # 2 red
-        # 3 yellow
-        if means[2]>140 and 10 < means[2]-means[1] < 50 and means[0] < means[1]/2:
-            return 3
-        return np.argmax(means)
+        return ColorRGBA(means[2],means[1],means[0],1)
+
+    def extract_data(self,warped_image):
+        data = self.extract_qr(warped_image)
+        if not data:
+            data = self.extract_digits(warped_image)
+        if not data:
+            data = self.extract_slope(warped_image)
+        print(data)
+        return data
+
+    def extract_qr(self,warped_image):
+        decodedObjects = pyzbar.decode(warped_image)
+        if len(decodedObjects) != 1:
+            return None
+        data = decodedObjects[0].data
+        points = data.split(";")
+        xy = [point.split("_") for point in points]
+        print("QR not None")
+        return {"k":None,"points":xy}
+
+    def extract_digits(self,warped_image):
+        config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'
+        text = pytesseract.image_to_string(warped_image[60:-60,:,:], config = config)
+        text = text.strip()
+        print(text)
+        if len(text)==2:
+            x=int(text[0])
+            y=int(text[1])
+            print('The extracted datapoints are x=%d, y=%d' % (x,y))
+            return {"k":None,"points":[[x,y]]}
+        else:
+            print('The extracted text has is of length %d. Aborting processing' % len(text))
+            return None
+
+    def extract_slope(self,warped_image):
+        image = warped_image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.medianBlur(image, 5)
+        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        kernel = np.ones((7,7),np.uint8)
+        image = cv2.erode(image, kernel, iterations = 2)
+        image = cv2.dilate(image, kernel, iterations = 2)
+        (n, out, stats, centers) = cv2.connectedComponentsWithStats(255-image, 4, cv2.CV_32S)
+        sorted_objects = np.argsort(stats[:,-1])
+        l1_ix = sorted_objects[-2]
+        l2_ix = sorted_objects[-3]
+        if centers[l1_ix][1] > centers[l2_ix][1]:
+            upper_line = out==l2_ix
+        else:
+            upper_line = out==l1_ix
+        
+        true_points = np.where(upper_line)
+        h = len(true_points)
+        line = np.polyfit(true_points[1], h - true_points[0],1)
+        return {"k":line[0],"points":[]}
 
     def warp(self, candidates,cv_image):
         corners, ids, _ = cv2.aruco.detectMarkers(cv_image,dictm,parameters=params)
@@ -242,10 +309,6 @@ class The_Ring:
                 np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
             return [(e1, e2)]
         return []
-
-    def cropImage(self, cv_image, top, bottom):
-        cv_image[0:top] = 0
-        cv_image[bottom:] = 0
 
     def depth_callback(self, data):
         try:
