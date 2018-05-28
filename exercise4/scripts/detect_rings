@@ -218,7 +218,7 @@ class The_Ring:
         config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'
         text = pytesseract.image_to_string(warped_image[60:-60, :, :], config=config)
         text = text.strip()
-        print(text)
+        #print(text)
         if len(text) == 2:
             x = int(text[0])
             y = int(text[1])
