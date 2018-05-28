@@ -17,19 +17,11 @@ from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
 from sensor_msgs.msg import Image
 from std_msgs.msg import ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
-from .colorizer import ColorLabeler
-
 
 dictm = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 
 # The object that we will pass to the markerDetect function
 params =  cv2.aruco.DetectorParameters_create()
-
-print(params.adaptiveThreshConstant) 
-print(params.adaptiveThreshWinSizeMax)
-print(params.adaptiveThreshWinSizeMin)
-print(params.minCornerDistanceRate)
-print(params.adaptiveThreshWinSizeStep)
 
 # To see description of the parameters
 # https://docs.opencv.org/3.3.1/d1/dcd/structcv_1_1aruco_1_1DetectorParameters.html
@@ -46,8 +38,6 @@ class The_Ring:
 
         # An object we use for converting images between ROS format and OpenCV format
         self.bridge = CvBridge()
-
-        self.color_labeler = ColorLabeler()
 
         # A help variable for holding the dimensions of the image
         self.dims = (0, 0, 0)
@@ -105,7 +95,6 @@ class The_Ring:
         point_s.header.stamp = rospy.Time(0)
 
         if abs(x) < 0.01 and abs(y) < 0.01:
-            print("Point at origin")
             return
 
         # Get the point in the "map" coordinate system
@@ -149,7 +138,6 @@ class The_Ring:
 
         #self.cropImage(cv_image, 120, 320)
 
-
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
 
@@ -159,48 +147,41 @@ class The_Ring:
         _, contoura, _ = cv2.findContours(
             thresha, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-        candidates = self.find_candidates(contoura)
+        circles = self.find_circles(contoura)
 
-        print("Candidates: ", len(candidates))
-        for c in candidates:
-            e1 = c[0]
-            e2 = c[1]
-            size = (c[0][1][0] + c[0][1][1]) / 2
-            center = (e1[0][1], e1[0][0])
-            median, _, _, _, _ = self.calcParameters(size, center,cv_image)
-            circle_color = self.color_labeler.extract_color(cv_image)
-            print(circle_color)
-            self.get_pose(e1, float(median) / 1000.0)
-
-            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
-            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
+        print("Circles: ", len(circles))        
         
-        if len(candidates)>0:
-            warped_image = self.warp(candidates,cv_image)
+        #cv2.imshow('cvimage',cv_image)
+        #cv2.waitKey(1)
+        
+        if len(circles)==1:
+            warped_image = self.warp(circles, cv_image)
             if not warped_image is None:
-                print("Saving!")
+                """ print("Saving!")
                 cv2.imwrite('/home/team_eta/ROS/src/images/warped_plot'+str(self.img_id)+'.png',warped_image)
                 rospy.sleep(0.5)
-                self.img_id+=1
+                self.img_id+=1 """
+                print(self.circle_color(warped_image))
                 cv2.imshow('Warped image',warped_image)
                 cv2.waitKey(1)
 
-
-    def calcParameters(self, size, center,cv_image):
-        x1 = int(center[0] - size / 2)
-        x2 = int(center[0] + size / 2)
-
-        x_min = x1 if x1 > 0 else 0
-        x_max = x2 if x2 < cv_image.shape[0] else cv_image.shape[0]
-
-        y1 = int(center[1] - size / 2)
-        y2 = int(center[1] + size / 2)
-
-        y_min = y1 if y1 > 0 else 0
-        y_max = y2 if y2 < cv_image.shape[1] else cv_image.shape[1]
-
-        median = np.median(self.depth_image[x_min:x_max, y_min:y_max])
-        return (median, y_min, y_max, x_min, x_max)
+    def circle_color(self,image):
+        topleft = image[0][0]
+        bottomleft = image[image.shape[0]-1][0]
+        topright = image[0][image.shape[1]-1]
+        bottomright = image[image.shape[0]-1][image.shape[1]-1]
+        matrix = np.array([topleft,topright,bottomleft,bottomright])
+        means = np.mean(matrix,axis=0)
+        #print(matrix)
+        #print(means)
+        #print(np.argmax(means))
+        # 0 blue
+        # 1 green
+        # 2 red
+        # 3 yellow
+        if means[2]>140 and 10 < means[2]-means[1] < 50 and means[0] < means[1]/2:
+            return 3
+        return np.argmax(means)
 
     def warp(self, candidates,cv_image):
         corners, ids, _ = cv2.aruco.detectMarkers(cv_image,dictm,parameters=params)
@@ -208,8 +189,8 @@ class The_Ring:
             return None
         
         # Increase proportionally if you want a larger image
-        image_size=(351*2,248*2,3)
-        marker_side=50*2
+        image_size=(700,500,3)
+        marker_side=100
 
         img_out = np.zeros(image_size, np.uint8)
         out_pts = np.array([[marker_side/2,img_out.shape[0]-marker_side/2],
@@ -239,43 +220,26 @@ class The_Ring:
 
         h, status = cv2.findHomography(src_points, out_pts)
         img_out = cv2.warpPerspective(cv_image, h, (img_out.shape[1],img_out.shape[0]))
-        img_out = img_out[110*2:250*2,50*2:195*2,:]
+        img_out = img_out[200:500,100:400,:]
         return img_out
 
-    def find_candidates(self, contours):
+    def find_circles(self, contours):
         elps = [cv2.fitEllipse(cnt) for cnt in contours if cnt.shape[0] >= 20]
-        candidates = []
+        circles = []
         for n in range(len(elps)):
             for m in range(n + 1, len(elps)):
-                candidates += self.isCircle2(elps[n], elps[m])
-        return candidates
+                circles += self.isCircle(elps[n], elps[m])
+        return circles
 
     def isCircle(self, e1, e2):
-        (x1, y1), (majoraxis1, minoraxis1), angle1 = e1
-        (x2, y2), (majoraxis2, minoraxis2), angle2 = e2
-        center_to_center_distance = np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2))
-        majoraxisdiff = abs(majoraxis1 - majoraxis2)
-        minoraxisdiff = abs(minoraxis1 - minoraxis2)
-        if (center_to_center_distance < 5 and
-                10 < majoraxisdiff < 40 and 10 < minoraxisdiff < 40):
-            return [(e1, e2)]
-        return []
-
-    def isCircle2(self, e1, e2):
         (x1, y1), (minoraxis1, majoraxis1), angle1 = e1
         (x2, y2), (minoraxis2, majoraxis2), angle2 = e2
         if (0.22 < abs(majoraxis1/majoraxis2-1) < 0.32 and
             0.22 < abs(minoraxis1/minoraxis2-1) < 0.32 and
             abs(minoraxis1/majoraxis2-1) < 0.65 and
             abs(majoraxis1/minoraxis2-1) < 0.35 and
-            20 < minoraxis1 < 85 and
+            20 < minoraxis1 and
                 np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
-            print(abs(majoraxis1/majoraxis2-1))
-            print(abs(minoraxis1/minoraxis2-1))
-            print(abs(minoraxis1/majoraxis2-1))
-            print(abs(majoraxis1/minoraxis2-1))
-            print(minoraxis1)
-            print()
             return [(e1, e2)]
         return []
 
