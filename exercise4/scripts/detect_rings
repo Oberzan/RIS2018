@@ -214,7 +214,17 @@ class The_Ring:
 
 
         print("---------QR DETECTED---------")
-        return {"k": None, "points": xy}
+
+
+        x = [arr[0] for arr in xy]
+        y = [arr[1] for arr in xy]
+
+
+        k, n = np.polyfit(x, y, 1)
+
+        print(k, n)
+
+        return {"k": k, "points": xy}
 
     def extract_digits(self, warped_image):
         config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'
