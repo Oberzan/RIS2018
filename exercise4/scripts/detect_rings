@@ -170,7 +170,7 @@ class The_Ring:
                 # print(circle_color)
                 self.extract_data(warped_image)
                 # self.post_position(x,y,circle_color)
-                cv2.imshow('Warped image', warped_image[60:-60, :, :])
+                cv2.imshow('Warped image', warped_image)
                 cv2.waitKey(1)
             # else:
             # self.post_position(x,y)
