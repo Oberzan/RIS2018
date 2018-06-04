@@ -122,18 +122,8 @@ class CryptoMaster(object):
         print("Execution finished")
 
     def ready_for_goal_state_handler(self):
-        print("--------Ready For Goal State Handler--------")
-        new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
-        print("Got new goal: ", new_goal)
-        self.goals_left.remove(new_goal)
-        print(len(self.goals_left), " goals left.")
-
-        move_status_result = self.move_to_point(new_goal)
-
-        if move_status_result == 'SUCCEEDED':
-            self.change_state(states.OBSERVING)
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
-            self.change_state(states.READY_FOR_GOAL)
+        pass
+    
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
