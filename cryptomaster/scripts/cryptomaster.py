@@ -14,9 +14,10 @@ from .util import flip, nearest_goal, point_2_base_goal, point_distance, quatern
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Twist
 import states as states
-from .constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT
+from .constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, NUM_CYLINDERS_TO_APPROACH
 from .moves import rotate
-from .cluster import Clusterer
+from .cluster2 import Clusterer
+from .trader import Trader
 from std_msgs.msg import String, Int8
 from .hand import HandManipulator
 from tf.transformations import quaternion_from_euler
@@ -34,14 +35,17 @@ class CryptoMaster(object):
                                             goal_step=rospy.get_param('~step'))
 
         self.hand_manipulator = HandManipulator()
-        self.clusterer = Clusterer(min_center_detections=15)
+        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=30)
+        self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
+        self.trader = Trader()
+
         self.cv_map = None
         self.map_transform = None
         self.map_resolution = 0
         self.viewpoints = None
         self.goals_left = None
         self.robot_location = Point(100.0, 15.0, 0.0)
-        self.circles_detected = 0
+        self.cylinders_approached = 0
         self.coins_dropped = 0
 
         self.state_handlers = {
@@ -65,11 +69,23 @@ class CryptoMaster(object):
     def map_state_handler(self):
         print("Waiting for map_callback...")
 
+    def is_ready_for_cylinders(self):
+        circles_detected = self.circle_clusterer.get_num_jobs() >= 7
+        jobs_calculated = self.cylinder_clusterer.jobs_calculated
+
+        if not jobs_calculated:
+            print("Calculating jobs!!")
+            gains = self.trader.get_job_gains(self.circle_clusterer.jobs)
+            self.cylinder_clusterer.sort_jobs(gains)
+
+        return circles_detected and jobs_calculated
+
     def change_state(self, state):
         self.state = state
         string_message = String()
         string_message.data = self.state
-        self.clusterer.change_state(state)
+        self.cylinder_clusterer.change_state(state)
+        self.circle_clusterer.change_state(state)
         self.engine_state_publisher.publish(string_message)
 
     def run_robot(self):
@@ -83,16 +99,23 @@ class CryptoMaster(object):
             else:
                 print("UNKNOWN STATE: ", self.state)
 
-            while self.clusterer.has_pending_jobs():
-                if self.circles_detected == NUM_CIRCLES_TO_DETECT:
-                    break
 
-                circle_target = self.clusterer.get_next_job()
-                self.handle_cluster_job(circle_target)
+            if self.is_ready_for_cylinders():
+                print("--------Ready for cylinders--------")
+                while self.cylinder_clusterer.has_pending_jobs():
+                    if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
+                        break
 
-            if self.circles_detected == NUM_CIRCLES_TO_DETECT:
+                    cylinder_target = self.cylinder_clusterer.get_next_job()
+                    self.handle_cluster_job(cylinder_target)
+            else:
+                print("--------Not ready for cylinders--------")
+                print("Num data confirmed circles: ", self.circle_clusterer.get_num_jobs())
+
+            if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                 self.say("Die puny humans.")
                 break
+
 
             rate.sleep()
 
@@ -155,14 +178,14 @@ class CryptoMaster(object):
 
             if approach_status == 'SUCCEEDED':
                 succeded = True
-                _, cluster_ix = self.clusterer.find_nearest_cluster(target)
+                _, cluster_ix, _, _ = self.clusterer.find_nearest_cluster(target)
                 self.clusterer.reset_cluster(cluster_ix)
 
                 self.change_state(states.OBSERVING)
                 rospy.sleep(5)
                 self.change_state(states.CIRCLE_APPROACHED)
 
-                improved_cluster = self.clusterer.centers[cluster_ix]
+                improved_cluster = self.clusterer.get_cluster(cluster_ix)
                 print(improved_cluster)
 
                 _, rotated_quat = rotate_quaternion(q, 90)
@@ -178,7 +201,7 @@ class CryptoMaster(object):
         self.state = states.CIRCLE_APPROACHED
 
         self.say("Cylinder detected", 3)
-        self.circles_detected += 1
+        self.cylinders_approached += 1
         self.cylinder_approached_handler()
 
     def find_nearest_viewpoints(self, circle_target, robot_location):

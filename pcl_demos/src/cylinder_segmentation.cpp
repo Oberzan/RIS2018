@@ -307,7 +307,7 @@ int main(int argc, char **argv)
 
   pubm = nh.advertise<visualization_msgs::Marker>("detected_cylinder", 1);
 
-  pubx = nh.advertise<geometry_msgs::Point>("cluster/point", 100);
+  pubx = nh.advertise<geometry_msgs::Point>("cluster/cylinder", 100);
 
   // Spin
   ros::spin();

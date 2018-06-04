@@ -3,6 +3,7 @@ from __future__ import print_function
 
 # roslib.load_manifest('exercise4')
 import sys
+import json
 
 import cv2
 import numpy as np
@@ -117,16 +118,7 @@ class The_Ring:
         marker.color = color
 
         if data:
-            points = data.get('points')
-            if points:
-                geometry_points = [Point(p[0], p[1], 0) for p in points]
-                marker.points = geometry_points
-            else:
-                print("No points?")
-
-            k = data.get('k')
-            if k:
-                marker.text = str(k)
+            marker.text = json.dumps(data)
 
 
         self.marker_array.markers.append(marker)
