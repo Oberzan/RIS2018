@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
+import math
 # roslib.load_manifest('exercise4')
 import sys
-import json
 
 import cv2
 import numpy as np
-import pytesseract
-import pyzbar.pyzbar as pyzbar
+import roslib
 import rospy
+import tf
+import tf2_geometry_msgs
 import tf2_ros
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Point, PointStamped, Pose, Vector3
 from sensor_msgs.msg import Image
 from std_msgs.msg import ColorRGBA, String
 from visualization_msgs.msg import Marker, MarkerArray
+import json
+
+import pyzbar.pyzbar as pyzbar
+import pytesseract
 
 dictm = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 
@@ -120,7 +125,6 @@ class The_Ring:
         if data:
             marker.text = json.dumps(data)
 
-
         self.marker_array.markers.append(marker)
         self.cluster_publisher.publish(marker)
         self.markers_pub.publish(self.marker_array)
@@ -135,7 +139,7 @@ class The_Ring:
             print(e)
         self.dims = cv_image.shape
 
-        # self.cropImage(cv_image, 120, 320)
+        #self.cropImage(cv_image, 120, 320)
 
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
@@ -173,11 +177,11 @@ class The_Ring:
             if not warped_image is None:
                 circle_color = self.circle_color(warped_image)
                 data = self.extract_data(warped_image)
-                self.post_position(x, y, circle_color, data)
+                self.post_position(x, y, circle_color,data)
                 cv2.imshow('Warped image', warped_image)
                 cv2.waitKey(1)
             else:
-                self.post_position(x,y)
+                self.post_position(x, y)
 
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
@@ -187,9 +191,9 @@ class The_Ring:
 
     def circle_color(self, image):
         topleft = image[0][0]
-        bottomleft = image[image.shape[0] - 1][0]
-        topright = image[0][image.shape[1] - 1]
-        bottomright = image[image.shape[0] - 1][image.shape[1] - 1]
+        bottomleft = image[image.shape[0]-1][0]
+        topright = image[0][image.shape[1]-1]
+        bottomright = image[image.shape[0]-1][image.shape[1]-1]
         matrix = np.array([topleft, topright, bottomleft, bottomright])
         means = np.mean(matrix, axis=0)
         return ColorRGBA(means[2], means[1], means[0], 1)
@@ -225,9 +229,10 @@ class The_Ring:
 
     def extract_digits(self, warped_image):
         config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'
-        text = pytesseract.image_to_string(warped_image[60:-60, :, :], config=config)
+        text = pytesseract.image_to_string(
+            warped_image[60:-60, :, :], config=config)
         text = text.strip()
-        #print(text)
+        # print(text)
         if len(text) == 2:
             x = int(text[0])
             y = int(text[1])
@@ -240,11 +245,13 @@ class The_Ring:
         image = warped_image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = cv2.medianBlur(image, 5)
-        image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        image = cv2.adaptiveThreshold(
+            image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
         kernel = np.ones((7, 7), np.uint8)
         image = cv2.erode(image, kernel, iterations=2)
         image = cv2.dilate(image, kernel, iterations=2)
-        (n, out, stats, centers) = cv2.connectedComponentsWithStats(255 - image, 4, cv2.CV_32S)
+        (n, out, stats, centers) = cv2.connectedComponentsWithStats(
+            255 - image, 4, cv2.CV_32S)
         if n < 3:
             return None
         sorted_objects = np.argsort(stats[:, -1])
@@ -271,7 +278,8 @@ class The_Ring:
         return {"k": line[0], "points": []}
 
     def warp(self, candidates, cv_image):
-        corners, ids, _ = cv2.aruco.detectMarkers(cv_image, dictm, parameters=params)
+        corners, ids, _ = cv2.aruco.detectMarkers(
+            cv_image, dictm, parameters=params)
         if ids is None or len(ids) != 4:
             return None
 
@@ -280,18 +288,19 @@ class The_Ring:
         marker_side = 100
 
         img_out = np.zeros(image_size, np.uint8)
-        out_pts = np.array([[marker_side / 2, img_out.shape[0] - marker_side / 2],
-                            [img_out.shape[1] - marker_side / 2, img_out.shape[0] - marker_side / 2],
-                            [marker_side / 2, marker_side / 2],
-                            [img_out.shape[1] - marker_side / 2, marker_side / 2]])
+        out_pts = np.array([[marker_side/2, img_out.shape[0]-marker_side/2],
+                            [img_out.shape[1]-marker_side/2,
+                                img_out.shape[0]-marker_side/2],
+                            [marker_side/2, marker_side/2],
+                            [img_out.shape[1]-marker_side/2, marker_side/2]])
 
         src_points = np.zeros((4, 2))
         cens_mars = np.zeros((4, 2))
         for idx in ids:
             # Calculate the center point of all markers
-            cors = np.squeeze(corners[idx[0] - 1])
+            cors = np.squeeze(corners[idx[0]-1])
             cen_mar = np.mean(cors, axis=0)
-            cens_mars[idx[0] - 1] = cen_mar
+            cens_mars[idx[0]-1] = cen_mar
             cen_point = np.mean(cens_mars, axis=0)
 
         for coords in cens_mars:
@@ -306,7 +315,8 @@ class The_Ring:
                 src_points[1] = coords
 
         h, status = cv2.findHomography(src_points, out_pts)
-        img_out = cv2.warpPerspective(cv_image, h, (img_out.shape[1], img_out.shape[0]))
+        img_out = cv2.warpPerspective(
+            cv_image, h, (img_out.shape[1], img_out.shape[0]))
         img_out = img_out[200:500, 100:400, :]
         return img_out
 
@@ -321,11 +331,11 @@ class The_Ring:
     def isCircle(self, e1, e2):
         (x1, y1), (minoraxis1, majoraxis1), angle1 = e1
         (x2, y2), (minoraxis2, majoraxis2), angle2 = e2
-        if (0.22 < abs(majoraxis1 / majoraxis2 - 1) < 0.32 and
-                0.22 < abs(minoraxis1 / minoraxis2 - 1) < 0.32 and
-                abs(minoraxis1 / majoraxis2 - 1) < 0.65 and
-                abs(majoraxis1 / minoraxis2 - 1) < 0.35 and
-                20 < minoraxis1 and
+        if (0.22 < abs(majoraxis1/majoraxis2-1) < 0.32 and
+            0.22 < abs(minoraxis1/minoraxis2-1) < 0.32 and
+            abs(minoraxis1/majoraxis2-1) < 0.65 and
+            abs(majoraxis1/minoraxis2-1) < 0.35 and
+            20 < minoraxis1 and
                 np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
             return [(e1, e2)]
         return []
