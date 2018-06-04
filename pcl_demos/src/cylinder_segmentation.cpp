@@ -96,7 +96,7 @@ std::vector<pcl::PointIndices> RegionGrowingRGB(
 
   if (colored_cloud)
   {
-    std::cerr << "Colored" << std::endl;
+    //std::cerr << "Colored" << std::endl;
     colored_cloud->header = cloud->header;
     colored_cloud->sensor_origin_ = cloud->sensor_origin_;
     colored_cloud->sensor_orientation_ = cloud->sensor_orientation_;
@@ -139,8 +139,22 @@ void publishMarker(
     geometry_msgs::TransformStamped tss)
 {
   Eigen::Vector4f centroid;
+
+  // calculate average color of cyllinder
+  PointT &point1 = cloud->at(cloud->points.size() / 2);
+  PointT &point2 = cloud->at(cloud->points.size() / 2 + 1);
+  PointT &point3 = cloud->at(cloud->points.size() / 2 + 2);
+  PointT &point4 = cloud->at(cloud->points.size() / 2 - 1);
+  PointT &point5 = cloud->at(cloud->points.size() / 2 - 2);
+
+  float red = (point1.r + point2.r + point3.r + point4.r + point5.r) / 5.0;
+  float green = (point1.g + point2.g + point3.g + point4.g + point5.g) / 5.0;
+  float blue = (point1.b + point2.b + point3.b + point4.b + point5.b) / 5.0;
+
+  std::cerr << "RED: " << red << " GREEN: " << green << " BLUE" << blue << std::endl;
+
   pcl::compute3DCentroid(*cloud, centroid);
-  std::cerr << "centroid of the cylindrical component: " << centroid[0] << " " << centroid[1] << " " << centroid[2] << " " << centroid[3] << std::endl;
+  //std::cerr << "centroid of the cylindrical component: " << centroid[0] << " " << centroid[1] << " " << centroid[2] << " " << centroid[3] << std::endl;
 
   //Create a point in the "camera_rgb_optical_frame"
   geometry_msgs::PointStamped point_camera;
@@ -159,9 +173,9 @@ void publishMarker(
 
   tf2::doTransform(point_camera, point_map, tss);
 
-  std::cerr << "point_camera: " << point_camera.point.x << " " << point_camera.point.y << " " << point_camera.point.z << std::endl;
+  //std::cerr << "point_camera: " << point_camera.point.x << " " << point_camera.point.y << " " << point_camera.point.z << std::endl;
 
-  std::cerr << "point_map: " << point_map.point.x << " " << point_map.point.y << " " << point_map.point.z << std::endl;
+  //std::cerr << "point_map: " << point_map.point.x << " " << point_map.point.y << " " << point_map.point.z << std::endl;
 
   marker.header.frame_id = "map";
   marker.header.stamp = ros::Time::now();
@@ -184,9 +198,9 @@ void publishMarker(
   marker.scale.y = 0.1;
   marker.scale.z = 0.1;
 
-  marker.color.r = 0.0f;
-  marker.color.g = 1.0f;
-  marker.color.b = 0.0f;
+  marker.color.r = red;
+  marker.color.g = green;
+  marker.color.b = blue;
   marker.color.a = 1.0f;
 
   marker.lifetime = ros::Duration();
@@ -194,28 +208,30 @@ void publishMarker(
   pubm.publish(marker);
 
   geometry_msgs::Point point;
-  point.x=point_map.point.x;
-  point.y=point_map.point.y;
-  point.z=point_map.point.z;
+  point.x = point_map.point.x;
+  point.y = point_map.point.y;
+  point.z = point_map.point.z;
 
   pubx.publish(point);
-  
 }
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 {
   //std::cerr << engine_state << std::endl;
-  if(engine_state!="observing") return;
+  //if(engine_state!="observing") return;
   geometry_msgs::TransformStamped tss;
-  try{
-     tss = tf2_buffer.lookupTransform("map", "camera_rgb_optical_frame", ros::Time(0));
+  try
+  {
+    tss = tf2_buffer.lookupTransform("map", "camera_rgb_optical_frame", ros::Time(0));
   }
-  catch (tf2::ExtrapolationException &ex) {
-    ROS_WARN("%s",ex.what());
+  catch (tf2::ExtrapolationException &ex)
+  {
+    ROS_WARN("%s", ex.what());
     return;
   }
-  catch (tf2::TransformException &ex) {
-    ROS_WARN("%s",ex.what());
+  catch (tf2::TransformException &ex)
+  {
+    ROS_WARN("%s", ex.what());
     return;
   }
 
@@ -233,12 +249,12 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   voxel_filter.filter(voxel_filtered);
 
   pcl::fromPCLPointCloud2(voxel_filtered, *cloud);
-  std::cerr << "PointCloud has: " << cloud->points.size() << " data points." << std::endl;
+  //std::cerr << "PointCloud has: " << cloud->points.size() << " data points." << std::endl;
 
   PassThroughFilter(cloud);
   StatisticalOutlierRemovalFilter(cloud);
 
-  std::cerr << "PointCloud after filtering has: " << cloud->points.size() << " data points." << std::endl;
+  //std::cerr << "PointCloud after filtering has: " << cloud->points.size() << " data points." << std::endl;
 
   pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
   tree->setInputCloud(cloud);
@@ -247,9 +263,9 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud;
   std::vector<pcl::PointIndices> clusters = RegionGrowingRGB(cloud_normals, cloud, tree, colored_cloud);
 
-  if (colored_cloud)
+  if (clusters.size() > 0)
   {
-    std::cerr << clusters.size() << std::endl;
+    //std::cerr << clusters.size() << std::endl;
     for (int i = 0; i < clusters.size(); i++)
     {
       pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
@@ -260,7 +276,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
       pcl::PointCloud<PointT>::Ptr cloud_cluster(new pcl::PointCloud<PointT>);
       pcl::PointCloud<pcl::Normal>::Ptr cluster_normals(new pcl::PointCloud<pcl::Normal>);
 
-      extract.setInputCloud(colored_cloud);
+      extract.setInputCloud(cloud);
       extract.setIndices(inliers);
       extract.setNegative(false);
       extract.filter(*cloud_cluster);
@@ -282,7 +298,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
   }
 }
 
-void engine_state_callback(const std_msgs::String::ConstPtr& message)
+void engine_state_callback(const std_msgs::String::ConstPtr &message)
 {
   engine_state = (*message).data;
   std::cerr << engine_state << std::endl;
@@ -300,7 +316,7 @@ int main(int argc, char **argv)
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
 
-  ros::Subscriber engine_state_sub = nh.subscribe("engine/status",1, engine_state_callback);
+  ros::Subscriber engine_state_sub = nh.subscribe("engine/status", 1, engine_state_callback);
 
   // Create a ROS publisher for the output point cloud
   puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
