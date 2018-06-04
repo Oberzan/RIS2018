@@ -97,20 +97,22 @@ class Clusterer():
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
         discrete_color = self.calculate_color(color)
-        print("Color: ", discrete_color)
+        # print("Color: ", discrete_color)
         data = json.loads(marker.text) if marker.text else None
 
         if closest_center:
             print("[Cluster] updating existing cluster")
-            new_center = closest_center.move_center(p, data)
+            new_center = closest_center.move_center(p, data, color, discrete_color)
             self.centers[min_ix] = new_center
+            print(new_center.get_discrete_color())
 
             if new_center.n >= self.min_center_distance and not new_center.is_visited:
                 new_center.is_visited = True
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
-            self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_color, data))
+            discrete_colors = {discrete_color: 1}
+            self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
 
         self.publish_markers()
