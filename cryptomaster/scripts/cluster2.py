@@ -45,7 +45,6 @@ class Clusterer():
 
     def calculate_color(self, color_rgb):
         hsv_color = colorsys.rgb_to_hsv(color_rgb.r, color_rgb.g, color_rgb.b)
-
         angle = hsv_color[0] * 360
         if angle > 330 or angle < 15:
             return 'red'
@@ -96,9 +95,14 @@ class Clusterer():
 
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
-        discrete_color = self.calculate_color(color)
-        # print("Color: ", discrete_color)
+        if color.r == 0 and color.g == 0 and color.b == 0:
+            color, discrete_color = None, None
+            print("HOLA!")
+        else:
+            discrete_color = self.calculate_color(color)
         data = json.loads(marker.text) if marker.text else None
+
+        
 
         if closest_center:
             print("[Cluster] updating existing cluster")
@@ -111,7 +115,7 @@ class Clusterer():
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
-            discrete_colors = {discrete_color: 1}
+            discrete_colors = {discrete_color: 1} if discrete_color else {}
             self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
 

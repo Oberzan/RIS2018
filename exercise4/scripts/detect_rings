@@ -175,9 +175,9 @@ class The_Ring:
             if not warped_image is None:
                 circle_color = self.circle_color(warped_image)
                 data = self.extract_data(warped_image)
-                self.post_position(x, y, circle_color,data)
-                cv2.imshow('Warped image', warped_image)
-                cv2.waitKey(1)
+                self.post_position(x, y, circle_color, data)
+                #cv2.imshow('Warped image', warped_image)
+                #cv2.waitKey(1)
             else:
                 self.post_position(x, y)
 
