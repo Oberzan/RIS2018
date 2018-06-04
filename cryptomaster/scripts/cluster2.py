@@ -20,6 +20,10 @@ class Clusterer():
         self.jobs_created = 0
         self.state = states.DEFAULT
         self.jobs_calculated = False
+        self.topic = cluster_topic
+        self.num_jobs_handled = 0
+        self.finished_jobs = []
+
 
         self.visualization_colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
             255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
@@ -29,6 +33,9 @@ class Clusterer():
 
         _ = rospy.Subscriber(cluster_topic, Marker, self.point_callback)
 
+    def is_circle_cluster(self):
+        return self.topic == "cluster/point"
+
     def change_state(self,state):
         self.state = state
 
@@ -36,9 +43,15 @@ class Clusterer():
         return len(self.jobs) > 0
 
     def get_next_job(self):
+        self.num_jobs_handled += 1
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
-        return job
+        self.finished_jobs.append(job)
+
+        if job.data:
+            return self.get_next_job()
+        else:
+            return job
 
     def get_num_jobs(self):
         return len(self.jobs)
@@ -88,26 +101,18 @@ class Clusterer():
 
     def point_callback(self, marker):
         p = marker.pose.position
-
-        if self.state != states.OBSERVING:
-            return
-
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
         if color.r == 0 and color.g == 0 and color.b == 0:
             color, discrete_color = None, None
-            print("HOLA!")
         else:
             discrete_color = self.calculate_color(color)
         data = json.loads(marker.text) if marker.text else None
-
-        
 
         if closest_center:
             print("[Cluster] updating existing cluster")
             new_center = closest_center.move_center(p, data, color, discrete_color)
             self.centers[min_ix] = new_center
-            print(new_center.get_discrete_color())
 
             if new_center.n >= self.min_center_distance and not new_center.is_visited:
                 new_center.is_visited = True

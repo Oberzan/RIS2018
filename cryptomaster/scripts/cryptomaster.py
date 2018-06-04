@@ -45,8 +45,8 @@ class CryptoMaster(object):
         self.viewpoints = None
         self.goals_left = None
         self.robot_location = Point(100.0, 15.0, 0.0)
-        self.cylinders_approached = 0
         self.coins_dropped = 0
+        self.circles_approached = 0
 
         self.state_handlers = {
             states.READY_FOR_GOAL: self.ready_for_goal_state_handler,
@@ -70,12 +70,12 @@ class CryptoMaster(object):
         print("Waiting for map_callback...")
 
     def is_ready_for_cylinders(self):
-        circles_detected = self.circle_clusterer.get_num_jobs() >= 7
+        circles_detected = self.circle_clusterer.num_jobs_handled >= 7
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
-        if not jobs_calculated:
+        if circles_detected and not jobs_calculated:
             print("Calculating jobs!!")
-            gains = self.trader.get_job_gains(self.circle_clusterer.jobs)
+            gains = self.trader.get_job_gains(self.circle_clusterer.finished_jobs)
             self.cylinder_clusterer.sort_jobs(gains)
 
         return circles_detected and jobs_calculated
@@ -107,10 +107,17 @@ class CryptoMaster(object):
                         break
 
                     cylinder_target = self.cylinder_clusterer.get_next_job()
-                    self.handle_cluster_job(cylinder_target)
+                    self.handle_cluster_job(cylinder_target, self.cylinder_clusterer)
             else:
                 print("--------Not ready for cylinders--------")
-                print("Num data confirmed circles: ", self.circle_clusterer.get_num_jobs())
+                while self.circle_clusterer.has_pending_jobs():
+                    if self.circles_approached == NUM_CIRCLES_TO_DETECT:
+                        break
+
+                    circle_target = self.circle_clusterer.get_next_job()
+                    self.handle_cluster_job(circle_target, self.circle_clusterer)
+
+
 
             if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                 self.say("Die puny humans.")
@@ -145,8 +152,10 @@ class CryptoMaster(object):
         self.coins_dropped += 1
         self.state = states.READY_FOR_GOAL
 
-    def handle_cluster_job(self, target):
+    def handle_cluster_job(self, target, clusterer):
         print("--------Handle Cluster Job--------")
+
+        circle_goal = clusterer.is_circle_clusterer()
         nearest_viewpoints = self.find_nearest_viewpoints(
             target, self.robot_location)
 
@@ -168,17 +177,21 @@ class CryptoMaster(object):
 
             if approach_status == 'SUCCEEDED':
                 succeded = True
-                _, cluster_ix, _, _ = self.cylinder_clusterer.find_nearest_cluster(target)
-                self.cylinder_clusterer.reset_cluster(cluster_ix)
+                _, cluster_ix, _, _ = clusterer.find_nearest_cluster(target)
+                clusterer.reset_cluster(cluster_ix)
 
                 self.change_state(states.OBSERVING)
                 rospy.sleep(5)
                 self.change_state(states.CIRCLE_APPROACHED)
 
-                improved_cluster = self.cylinder_clusterer.get_cluster(cluster_ix)
+                improved_cluster = clusterer.centers[cluster_ix]
                 print(improved_cluster)
 
-                _, rotated_quat = rotate_quaternion(q, 90)
+
+                if circle_goal:
+                    _, rotated_quat = rotate_quaternion(q, 90)
+                else:
+                    rotated_quat = quaternion_ros
 
                 approached_target = get_approached_viewpoint(
                     approached_target, improved_cluster, 0.305)
@@ -187,12 +200,13 @@ class CryptoMaster(object):
 
             viewpoint_ix += 1
 
-        print("Moved to approached target!")
-        self.state = states.CIRCLE_APPROACHED
-
-        self.say("Cylinder detected", 3)
-        self.cylinders_approached += 1
-        self.cylinder_approached_handler()
+        if circle_goal:
+            print("Moved to circle target!")
+            self.circles_approached += 1
+            self.state = states.READY_FOR_GOAL
+        else:
+            self.say("Cylinder detected", 3)
+            self.cylinder_approached_handler()
 
     def find_nearest_viewpoints(self, circle_target, robot_location):
         print("--------Circle Goal Viewpoint--------")
