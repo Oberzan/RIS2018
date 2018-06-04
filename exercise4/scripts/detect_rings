@@ -130,8 +130,8 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        #if not self.engine_state == "observing":
-        #   return
+        if not self.engine_state == "observing":
+           return
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")

@@ -211,8 +211,8 @@ void publishMarker(
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 {
-  //std::cerr << engine_state << std::endl;
-  //if(engine_state!="observing") return;
+  std::cerr << engine_state << std::endl;
+  if(engine_state!="observing") return;
   geometry_msgs::TransformStamped tss;
   try
   {
