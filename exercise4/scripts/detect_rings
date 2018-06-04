@@ -199,11 +199,11 @@ class The_Ring:
         return ColorRGBA(means[2], means[1], means[0], 1)
 
     def extract_data(self, warped_image):
-        data = self.extract_qr(warped_image)
+        data = self.extract_slope(warped_image)
+        if not data:
+            data = self.extract_qr(warped_image)
         if not data:
             data = self.extract_digits(warped_image)
-        if not data:
-            data = self.extract_slope(warped_image)
 
         if data:
             print(data)
@@ -224,8 +224,10 @@ class The_Ring:
         y = xy[:, 1]
         [k, _] = np.polyfit(x, y, 1)
 
+        xy = [list(l) for l in xy]
+
         print("---------QR DETECTED---------")
-        return {"k": k, "points": list(xy)}
+        return {"k": k, "points": xy}
 
     def extract_digits(self, warped_image):
         config = '--psm 10 --eom 3 -c tessedit_char_whitelist=0123456789'
