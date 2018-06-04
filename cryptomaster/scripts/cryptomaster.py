@@ -6,20 +6,20 @@ import roslib
 roslib.load_manifest('cryptomaster')
 import numpy as np
 import rospy
-from .path_generator import GoalGenerator
+from path_generator import GoalGenerator
 from actionlib import SimpleActionClient
 from move_base_msgs.msg import MoveBaseAction
-from .util import flip, nearest_goal, point_2_base_goal, point_distance, quaternion_between, get_approached_viewpoint, \
+from util import flip, nearest_goal, point_2_base_goal, point_distance, quaternion_between, get_approached_viewpoint, \
     rotate_quaternion
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Twist
 import states as states
-from .constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, NUM_CYLINDERS_TO_APPROACH
-from .moves import rotate
-from .cluster2 import Clusterer
-from .trader import Trader
+from constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, NUM_CYLINDERS_TO_APPROACH
+from moves import rotate
+from cluster2 import Clusterer
+from trader import Trader
 from std_msgs.msg import String, Int8
-from .hand import HandManipulator
+from hand import HandManipulator
 from tf.transformations import quaternion_from_euler
 from openservorobot.msg import ManipulatorDescriptionM
 
@@ -34,7 +34,7 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        self.hand_manipulator = HandManipulator()
+        #self.hand_manipulator = HandManipulator()
         self.circle_clusterer = Clusterer("cluster/point", min_center_detections=30)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
@@ -122,18 +122,8 @@ class CryptoMaster(object):
         print("Execution finished")
 
     def ready_for_goal_state_handler(self):
-        print("--------Ready For Goal State Handler--------")
-        new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
-        print("Got new goal: ", new_goal)
-        self.goals_left.remove(new_goal)
-        print(len(self.goals_left), " goals left.")
-
-        move_status_result = self.move_to_point(new_goal)
-
-        if move_status_result == 'SUCCEEDED':
-            self.change_state(states.OBSERVING)
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
-            self.change_state(states.READY_FOR_GOAL)
+        pass
+    
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
@@ -277,7 +267,7 @@ class CryptoMaster(object):
 
 def main(args):
     crypto_robot = CryptoMaster()
-    crypto_robot.hand_manipulator.move_to_standby()
+    #crypto_robot.hand_manipulator.move_to_standby()
     crypto_robot.run_robot()
     # crypto_robot.hand_manipulator.grab_coin(0)
     # crypto_robot.hand_manipulator.drop_coin()

@@ -2,11 +2,11 @@ from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 import rospy
 from geometry_msgs.msg import Point, Vector3, Pose
-from .util import point_distance
-from .data import ClusterPoint
+from util import point_distance
+from data import ClusterPoint
 import states as states
 import json
-import numpy as np
+import colorsys
 
 
 class Clusterer():
@@ -43,24 +43,17 @@ class Clusterer():
     def get_num_jobs(self):
         return len(self.jobs)
 
-    def extract_color(self, color):
-        if color.b < 50 and color.r > 100 and color.g > 100:
-            return 'yellow'
-
-        l = [color.b, color.r, color.g]
-
-        max_ix = np.argmax(l)
-        if max_ix == 0:
-            return 'blue'
-        elif max_ix == 1:
+    def calculate_color(self, color_rgb):
+        hsv_color = colorsys.rgb_to_hsv(color_rgb.r, color_rgb.g, color_rgb.b)
+        angle = hsv_color[0] * 360
+        if angle > 330 or angle < 15:
             return 'red'
-        elif max_ix == 2:
+        elif angle < 70:
+            return 'yellow'
+        elif angle < 160:
             return 'green'
         else:
-            print("ERROR!")
-
-
-
+            return 'blue'
 
     def sort_jobs(self, gains):
         with_gains = [(job, gains.get(job.color)) for job in self.jobs]
@@ -94,28 +87,36 @@ class Clusterer():
         return closest_center, min_ix
 
     def point_callback(self, marker):
-        print(marker)
+        #print(marker)
         p = marker.pose.position
 
-        if self.state != states.OBSERVING:
-            return
+        #if self.state != states.OBSERVING:
+        #    return
 
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
-        discrete_color = self.extract_color(color)
+        if color.r == 0 and color.g == 0 and color.b == 0:
+            color, discrete_color = None, None
+            print("HOLA!")
+        else:
+            discrete_color = self.calculate_color(color)
         data = json.loads(marker.text) if marker.text else None
+
+        
 
         if closest_center:
             print("[Cluster] updating existing cluster")
-            new_center = closest_center.move_center(p, data)
+            new_center = closest_center.move_center(p, data, color, discrete_color)
             self.centers[min_ix] = new_center
+            print(new_center.get_discrete_color())
 
             if new_center.n >= self.min_center_distance and not new_center.is_visited:
                 new_center.is_visited = True
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
-            self.centers.append(ClusterPoint(p.x, p.y, 1, color, discrete_color, data))
+            discrete_colors = {discrete_color: 1} if discrete_color else {}
+            self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
 
         self.publish_markers()
@@ -124,8 +125,8 @@ class Clusterer():
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
         markers = [self.point_2_marker(p, ix)
                    for (ix, p) in enumerate(by_n[:3])]
-        print("[Cluster] Publishing {} markers.".format(len(markers)))
-        print(by_n)
+        #print("[Cluster] Publishing {} markers.".format(len(markers)))
+        #print(by_n)
         self.markers_pub.publish(markers)
 
     def point_2_marker(self, data_point, ix):
@@ -137,7 +138,7 @@ class Clusterer():
         marker.header.stamp = rospy.Time(0)
         marker.header.frame_id = "map"
         marker.pose = pose
-        marker.type = data_point.type
+        marker.type = Marker.SPHERE
         marker.action = Marker.ADD
         marker.frame_locked = False
         marker.lifetime = rospy.Duration.from_sec(30)

@@ -130,8 +130,8 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        if not self.engine_state == "observing":
-           return
+        #if not self.engine_state == "observing":
+        #   return
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -139,13 +139,11 @@ class The_Ring:
             print(e)
         self.dims = cv_image.shape
 
-        #self.cropImage(cv_image, 120, 320)
-
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
 
         thresha = cv2.adaptiveThreshold(
-            img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 23, 25)
+            img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 5)
 
         _, contoura, _ = cv2.findContours(
             thresha, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -177,17 +175,19 @@ class The_Ring:
             if not warped_image is None:
                 circle_color = self.circle_color(warped_image)
                 data = self.extract_data(warped_image)
-                self.post_position(x, y, circle_color,data)
-                cv2.imshow('Warped image', warped_image)
-                cv2.waitKey(1)
+                self.post_position(x, y, circle_color, data)
+                #cv2.imshow('Warped image', warped_image)
+                #cv2.waitKey(1)
             else:
                 self.post_position(x, y)
 
-            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
-            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
+            cv2.ellipse(thresha, e1, (0, 255, 0), 2)
+            cv2.ellipse(thresha, e2, (0, 255, 0), 2)
 
-        # cv2.imshow('cvimage',cv_image)
-        # cv2.waitKey(1)
+        #cv2.imshow('threshold',thresha)
+        #cv2.waitKey(1)
+
+        
 
     def circle_color(self, image):
         topleft = image[0][0]
@@ -196,7 +196,7 @@ class The_Ring:
         bottomright = image[image.shape[0]-1][image.shape[1]-1]
         matrix = np.array([topleft, topright, bottomleft, bottomright])
         means = np.mean(matrix, axis=0)
-        return ColorRGBA(means[2], means[1], means[0], 1)
+        return ColorRGBA(means[2]/255, means[1]/255, means[0]/255, 1)
 
     def extract_data(self, warped_image):
         data = self.extract_slope(warped_image)
