@@ -151,7 +151,7 @@ void publishMarker(
   float green = (point1.g + point2.g + point3.g + point4.g + point5.g) / 5.0;
   float blue = (point1.b + point2.b + point3.b + point4.b + point5.b) / 5.0;
 
-  std::cerr << "RED: " << red << " GREEN: " << green << " BLUE" << blue << std::endl;
+  std::cerr << "RED: " << red << " GREEN: " << green << " BLUE " << blue << std::endl;
 
   pcl::compute3DCentroid(*cloud, centroid);
   //std::cerr << "centroid of the cylindrical component: " << centroid[0] << " " << centroid[1] << " " << centroid[2] << " " << centroid[3] << std::endl;
@@ -198,27 +198,21 @@ void publishMarker(
   marker.scale.y = 0.1;
   marker.scale.z = 0.1;
 
-  marker.color.r = red;
-  marker.color.g = green;
-  marker.color.b = blue;
+  marker.color.r = red / 255;
+  marker.color.g = green / 255;
+  marker.color.b = blue / 255;
   marker.color.a = 1.0f;
 
   marker.lifetime = ros::Duration();
 
   pubm.publish(marker);
-
-  geometry_msgs::Point point;
-  point.x = point_map.point.x;
-  point.y = point_map.point.y;
-  point.z = point_map.point.z;
-
-  pubx.publish(point);
+  pubx.publish(marker);
 }
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 {
   //std::cerr << engine_state << std::endl;
-  if(engine_state!="observing") return;
+  //if(engine_state!="observing") return;
   geometry_msgs::TransformStamped tss;
   try
   {
@@ -323,7 +317,7 @@ int main(int argc, char **argv)
 
   pubm = nh.advertise<visualization_msgs::Marker>("detected_cylinder", 1);
 
-  pubx = nh.advertise<geometry_msgs::Point>("cluster/cylinder", 100);
+  pubx = nh.advertise<visualization_msgs::Marker>("cluster/cylinder", 100);
 
   // Spin
   ros::spin();

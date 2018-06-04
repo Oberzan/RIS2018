@@ -130,8 +130,8 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        if not self.engine_state == "observing":
-           return
+        #if not self.engine_state == "observing":
+        #   return
 
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -186,8 +186,7 @@ class The_Ring:
             cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
             cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
 
-        # cv2.imshow('cvimage',cv_image)
-        # cv2.waitKey(1)
+        
 
     def circle_color(self, image):
         topleft = image[0][0]
@@ -196,7 +195,7 @@ class The_Ring:
         bottomright = image[image.shape[0]-1][image.shape[1]-1]
         matrix = np.array([topleft, topright, bottomleft, bottomright])
         means = np.mean(matrix, axis=0)
-        return ColorRGBA(means[2], means[1], means[0], 1)
+        return ColorRGBA(means[2]/255, means[1]/255, means[0]/255, 1)
 
     def extract_data(self, warped_image):
         data = self.extract_slope(warped_image)

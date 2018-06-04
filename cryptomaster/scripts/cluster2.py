@@ -2,8 +2,8 @@ from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 import rospy
 from geometry_msgs.msg import Point, Vector3, Pose
-from .util import point_distance
-from .data import ClusterPoint
+from util import point_distance
+from data import ClusterPoint
 import states as states
 import json
 import colorsys
@@ -44,7 +44,7 @@ class Clusterer():
         return len(self.jobs)
 
     def calculate_color(self, color_rgb):
-        hsv_color = colorsys.rgb_to_hsv(color_rgb[0], color_rgb[1], color_rgb[2])
+        hsv_color = colorsys.rgb_to_hsv(color_rgb.r, color_rgb.g, color_rgb.b)
 
         angle = hsv_color[0] * 360
         if angle > 330 or angle < 15:
@@ -88,15 +88,15 @@ class Clusterer():
         return closest_center, min_ix
 
     def point_callback(self, marker):
-        print(marker)
+        #print(marker)
         p = marker.pose.position
 
-        if self.state != states.OBSERVING:
-            return
+        #if self.state != states.OBSERVING:
+        #    return
 
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
-        discrete_color = self.extract_color(color)
+        discrete_color = self.calculate_color(color)
         print("Color: ", discrete_color)
         data = json.loads(marker.text) if marker.text else None
 
@@ -110,7 +110,7 @@ class Clusterer():
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
-            self.centers.append(ClusterPoint(p.x, p.y, 1, color, discrete_color, data))
+            self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_color, data))
             print("[Cluster] Adding new center")
 
         self.publish_markers()
@@ -119,8 +119,8 @@ class Clusterer():
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
         markers = [self.point_2_marker(p, ix)
                    for (ix, p) in enumerate(by_n[:3])]
-        print("[Cluster] Publishing {} markers.".format(len(markers)))
-        print(by_n)
+        #print("[Cluster] Publishing {} markers.".format(len(markers)))
+        #print(by_n)
         self.markers_pub.publish(markers)
 
     def point_2_marker(self, data_point, ix):
@@ -132,7 +132,7 @@ class Clusterer():
         marker.header.stamp = rospy.Time(0)
         marker.header.frame_id = "map"
         marker.pose = pose
-        marker.type = data_point.type
+        marker.type = Marker.SPHERE
         marker.action = Marker.ADD
         marker.frame_locked = False
         marker.lifetime = rospy.Duration.from_sec(30)
