@@ -6,7 +6,7 @@ from .util import point_distance
 from .data import ClusterPoint
 import states as states
 import json
-import numpy as np
+import colorsys
 
 
 class Clusterer():
@@ -43,24 +43,19 @@ class Clusterer():
     def get_num_jobs(self):
         return len(self.jobs)
 
-    def extract_color(self, color):
-        if color.b < 50 and color.r > 100 and color.g > 100:
-            return 'yellow'
+    def calculate_color(self, color_rgb):
+        color_rgb = [color / 255.0 for color in color_rgb]
+        hsv_color = colorsys.rgb_to_hsv(color_rgb[0], color_rgb[1], color_rgb[2])
 
-        l = [color.b, color.r, color.g]
-
-        max_ix = np.argmax(l)
-        if max_ix == 0:
-            return 'blue'
-        elif max_ix == 1:
+        angle = hsv_color[0] * 360
+        if angle > 330 or angle < 15:
             return 'red'
-        elif max_ix == 2:
+        elif angle < 70:
+            return 'yellow'
+        elif angle < 160:
             return 'green'
         else:
-            print("ERROR!")
-
-
-
+            return 'blue'
 
     def sort_jobs(self, gains):
         with_gains = [(job, gains.get(job.color)) for job in self.jobs]
@@ -103,6 +98,7 @@ class Clusterer():
         closest_center, min_ix = self.find_nearest_cluster(p)
         color = marker.color
         discrete_color = self.extract_color(color)
+        print("Color: ", discrete_color)
         data = json.loads(marker.text) if marker.text else None
 
         if closest_center:
