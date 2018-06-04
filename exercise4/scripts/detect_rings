@@ -139,13 +139,11 @@ class The_Ring:
             print(e)
         self.dims = cv_image.shape
 
-        #self.cropImage(cv_image, 120, 320)
-
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         img = cv2.equalizeHist(gray)
 
         thresha = cv2.adaptiveThreshold(
-            img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 23, 25)
+            img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 5)
 
         _, contoura, _ = cv2.findContours(
             thresha, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -183,8 +181,11 @@ class The_Ring:
             else:
                 self.post_position(x, y)
 
-            cv2.ellipse(cv_image, e1, (0, 255, 0), 2)
-            cv2.ellipse(cv_image, e2, (0, 255, 0), 2)
+            cv2.ellipse(thresha, e1, (0, 255, 0), 2)
+            cv2.ellipse(thresha, e2, (0, 255, 0), 2)
+
+        #cv2.imshow('threshold',thresha)
+        #cv2.waitKey(1)
 
         
 
