@@ -1,3 +1,7 @@
+from itertools import groupby
+from numpy.polynomial.polynomial import polyfit
+import numpy as np
+
 
 class Trader(object):
     def __init__(self):
@@ -19,7 +23,6 @@ class Trader(object):
 
             merged_data['points'] = (merged_data.get('points', []) + data.get('points', []))
         return merged_data
-
 
 
     def _calculate_gains(self, color, group):
@@ -49,14 +52,14 @@ class Trader(object):
         print("7th day: ", d7)
         print("Gains: ", gains)
 
-        plt.plot(x, y, '.')
-        plt.plot(x, n + (k * x), '-')
-        plt.show()
+        ## plt.plot(x, y, '.')
+        ## plt.plot(x, n + (k * x), '-')
+        ## plt.show()
         return {'color': color, "gains": gains}
 
 
     def get_job_gains(self, data_points):
-        groups = groupby(data_points, lambda data_point: (data_point.color))
+        groups = groupby(data_points, lambda data_point: (data_point.discrete_color))
         res = {}
         for key, group in groups:
             gains = self._calculate_gains(key, group)

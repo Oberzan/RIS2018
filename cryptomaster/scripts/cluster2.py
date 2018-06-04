@@ -6,6 +6,7 @@ from .util import point_distance
 from .data import ClusterPoint
 import states as states
 import json
+import numpy as np
 
 
 class Clusterer():
@@ -41,6 +42,24 @@ class Clusterer():
 
     def get_num_jobs(self):
         return len(self.jobs)
+
+    def extract_color(self, color):
+        if color.b < 50 and color.r > 100 and color.g > 100:
+            return 'yellow'
+
+        l = [color.b, color.r, color.g]
+
+        max_ix = np.argmax(l)
+        if max_ix == 0:
+            return 'blue'
+        elif max_ix == 1:
+            return 'red'
+        elif max_ix == 2:
+            return 'green'
+        else:
+            print("ERROR!")
+
+
 
 
     def sort_jobs(self, gains):
@@ -82,7 +101,8 @@ class Clusterer():
             return
 
         closest_center, min_ix = self.find_nearest_cluster(p)
-        color = marker.color  ## TODO Extract actual color
+        color = marker.color
+        discrete_color = self.extract_color(color)
         data = json.loads(marker.text) if marker.text else None
 
         if closest_center:
@@ -95,7 +115,7 @@ class Clusterer():
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
-            self.centers.append(ClusterPoint(p.x, p.y, 1, color, data))
+            self.centers.append(ClusterPoint(p.x, p.y, 1, color, discrete_color, data))
             print("[Cluster] Adding new center")
 
         self.publish_markers()
