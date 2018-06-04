@@ -44,7 +44,6 @@ class Clusterer():
         return len(self.jobs)
 
     def calculate_color(self, color_rgb):
-        color_rgb = [color / 255.0 for color in color_rgb]
         hsv_color = colorsys.rgb_to_hsv(color_rgb[0], color_rgb[1], color_rgb[2])
 
         angle = hsv_color[0] * 360
