@@ -207,11 +207,13 @@ class CryptoMaster(object):
 
                 if circle_goal:
                     print("Circle cluster job handler!")
-                    ## rotated_quat = quaternion_ros
+                    rotated_quat = quaternion_ros
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
-                    self.move_to_point(approached_target, quaternion=rotated_quat)
+
+
+                self.move_to_point(approached_target, quaternion=rotated_quat)
 
 
 
