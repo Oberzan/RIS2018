@@ -51,4 +51,4 @@ class ClusterPoint():
             else:
                 self.discrete_colors[new_discrete_color] += 1
 
-        return ClusterPoint(new_x, new_y, self.n + 1, self.is_visited, new_color, self.discrete_colors, actual_data)
+        return ClusterPoint(new_x, new_y, self.n + 1, self.is_visited, new_color, self.discrete_colors, self.data)
