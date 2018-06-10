@@ -31,12 +31,16 @@ class ClusterPoint():
     def move_center(self, p, new_data, new_color, new_discrete_color):
         new_x = (self.n * self.x + p.x) / (self.n + 1)
         new_y = (self.n * self.y + p.y) / (self.n + 1)
-        actual_data = new_data if new_data is not None else self.data
 
-        if not new_data in self.data:
-            self.data[new_data] = 1
-        else:
-            self.data[new_data] += 1
+
+        if new_data:
+            if self.data == None:
+                self.data = {}
+
+            if new_data in self.data:
+                self.data[new_data] += 1
+            else:
+                self.data[new_data] = 1
 
         if new_discrete_color:
             if self.discrete_colors == None:
