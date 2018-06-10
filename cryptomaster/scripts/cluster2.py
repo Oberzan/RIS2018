@@ -83,7 +83,7 @@ class Clusterer():
 
     def reset_cluster(self, cluster_ix):
         cluster = self.centers[cluster_ix]
-        reseted_cluster = ClusterPoint(cluster.x, cluster.y, 1, True)
+        reseted_cluster = cluster.reset_cluster_point()
         self.centers[cluster_ix] = reseted_cluster
 
     def find_nearest_cluster(self, p):
