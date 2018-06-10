@@ -109,7 +109,21 @@ class Clusterer():
         if self.state != states.OBSERVING:
             return
         p = marker.pose.position
-        closest_center, min_ix = self.find_nearest_cluster(p, self.centroid_treshold)
+        closest_center = None
+        min_dist = 999999999
+        min_ix = 0
+
+        for center_ix, center in enumerate(self.centers):
+            dist = point_distance(p, center)
+            if dist < min_dist and dist < self.centroid_treshold:
+                if closest_center:
+                    print("Detected in multiple centers")
+
+                closest_center = center
+                min_dist = dist
+                min_ix = center_ix
+
+
         color = marker.color
         if color.r == 0 and color.g == 0 and color.b == 0:
             color, discrete_color = None, None
