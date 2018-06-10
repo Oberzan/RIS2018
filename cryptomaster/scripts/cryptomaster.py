@@ -200,15 +200,17 @@ class CryptoMaster(object):
 
                 self.observe_for_n_seconds(5)
                 improved_cluster = clusterer.centers[cluster_ix]
-                approached_target = get_approached_viewpoint(
-                    approached_target, improved_cluster, 0.305)
 
                 if circle_goal:
                     print("Circle cluster job handler!")
                     rotated_quat = quaternion_ros
+                    approached_target = get_approached_viewpoint(
+                        approached_target, improved_cluster, 0.37)
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
+                    approached_target = get_approached_viewpoint(
+                        approached_target, improved_cluster, 0.305)
 
 
                 self.move_to_point(approached_target, quaternion=rotated_quat)
