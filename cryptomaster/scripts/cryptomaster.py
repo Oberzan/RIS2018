@@ -50,7 +50,8 @@ class CryptoMaster(object):
 
         self.state_handlers = {
             states.READY_FOR_GOAL: self.ready_for_goal_state_handler,
-            states.WAITING_FOR_MAP: self.map_state_handler
+            states.WAITING_FOR_MAP: self.map_state_handler,
+            states.GOALS_VISITED: self.goals_visited_handler
         }
 
         _ = rospy.Subscriber(
@@ -66,6 +67,11 @@ class CryptoMaster(object):
         self.engine_state_publisher = rospy.Publisher(
             "engine/status", String, queue_size=10)
 
+
+    def goals_visited_handler(self):
+        print("GOALS VISITED HANDLER")
+        self.change_state(states.READY_FOR_CYLINDERS)
+
     def map_state_handler(self):
         print("Waiting for map_callback...")
 
@@ -73,6 +79,8 @@ class CryptoMaster(object):
         print("-----------IS READY FOR CYLINDERS----------")
         circles_detected = self.circle_clusterer.num_jobs_handled >= 7
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
+
+
 
         if circles_detected and not jobs_calculated:
             print("Calculating jobs!!")
@@ -135,6 +143,9 @@ class CryptoMaster(object):
         print("--------Ready For Goal State Handler--------")
         new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
         print("Got new goal: ", new_goal)
+        if len(self.goals_left) == 0:
+            self.change_state(states.GOALS_VISITED)
+            return
         self.goals_left.remove(new_goal)
         print(len(self.goals_left), " goals left.")
 
