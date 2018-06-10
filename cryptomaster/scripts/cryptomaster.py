@@ -34,7 +34,7 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        self.hand_manipulator = HandManipulator()
+        #self.hand_manipulator = HandManipulator()
         self.circle_clusterer = Clusterer("cluster/point", min_center_detections=30)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
@@ -292,7 +292,7 @@ class CryptoMaster(object):
 
 def main():
     crypto_robot = CryptoMaster()
-    crypto_robot.hand_manipulator.move_to_standby()
+    #crypto_robot.hand_manipulator.move_to_standby()
     crypto_robot.run_robot()
     # crypto_robot.hand_manipulator.grab_coin(0)
     # crypto_robot.hand_manipulator.drop_coin()
@@ -303,4 +303,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
