@@ -43,13 +43,14 @@ class Clusterer():
         return len(self.jobs) > 0
 
     def get_next_job(self):
+
         self.num_jobs_handled += 1
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
         self.finished_jobs.append(job)
-
+        print("Num jobs handled: ", self.num_jobs_handled)
         if job.data:
-            print("JOB HAS DATA - GETTING NEXT jon")
+            print("JOB HAS DATA - GETTING NEXT job")
             print(job)
             if self.has_pending_jobs():
                 return self.get_next_job()
