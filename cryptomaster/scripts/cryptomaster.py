@@ -188,7 +188,7 @@ class CryptoMaster(object):
 
             if approach_status == 'SUCCEEDED':
                 succeded = True
-                _, cluster_ix, _, _ = clusterer.find_nearest_cluster(target)
+                _, cluster_ix = clusterer.find_nearest_cluster(target)
                 clusterer.reset_cluster(cluster_ix)
 
                 self.change_state(states.OBSERVING)
