@@ -141,7 +141,7 @@ class CryptoMaster(object):
 
         if move_status_result == 'SUCCEEDED':
             self.change_state(states.OBSERVING)
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
+            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, sleep_duration=2)
             self.change_state(states.READY_FOR_GOAL)
     
 
@@ -207,11 +207,13 @@ class CryptoMaster(object):
 
                 if circle_goal:
                     print("Circle cluster job handler!")
-                    ## rotated_quat = quaternion_ros
+                    rotated_quat = quaternion_ros
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
-                    self.move_to_point(approached_target, quaternion=rotated_quat)
+
+
+                self.move_to_point(approached_target, quaternion=rotated_quat)
 
 
 

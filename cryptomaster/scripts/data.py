@@ -10,9 +10,8 @@ class ClusterPoint():
         self.discrete_colors = discrete_colors
 
     def __str__(self):
-        return "[x: {}, y: {}, n: {}, is_visited: {}, color: {}, discrete_color: {}, data: {}]".format(self.x, self.y, self.n,
-                                                                                        self.is_visited,
-                                                                                        self.color, self.get_discrete_color(), self.data)
+        return "[n: {}, is_visited: {}, discrete_color: {}, data: {}]".format(self.n,
+                                                                                        self.is_visited, self.get_discrete_color(), self.data)
 
     def reset_cluster_point(self):
         return ClusterPoint(self.x, self.y, 1, True, self.color, self.discrete_colors, self.data)
@@ -33,6 +32,11 @@ class ClusterPoint():
         new_x = (self.n * self.x + p.x) / (self.n + 1)
         new_y = (self.n * self.y + p.y) / (self.n + 1)
         actual_data = new_data if new_data is not None else self.data
+
+        if not new_data in self.data:
+            self.data[new_data] = 1
+        else:
+            self.data[new_data] += 1
 
         if new_discrete_color:
             if self.discrete_colors == None:
