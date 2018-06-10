@@ -70,6 +70,7 @@ class CryptoMaster(object):
         print("Waiting for map_callback...")
 
     def is_ready_for_cylinders(self):
+        print("-----------IS READY FOR CYLINDERS----------")
         circles_detected = self.circle_clusterer.num_jobs_handled >= 7
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
