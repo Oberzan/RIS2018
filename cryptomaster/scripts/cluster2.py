@@ -51,7 +51,10 @@ class Clusterer():
         if job.data:
             print("JOB HAS DATA - GETTING NEXT jon")
             print(job)
-            return self.get_next_job()
+            if self.has_pending_jobs():
+                return self.get_next_job()
+            else:
+                return None
         else:
             return job
 
