@@ -204,8 +204,6 @@ class CryptoMaster(object):
                 if circle_goal:
                     print("Circle cluster job handler!")
                     rotated_quat = quaternion_ros
-                    approached_target = get_approached_viewpoint(
-                        approached_target, improved_cluster, 0.40)
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
@@ -214,13 +212,6 @@ class CryptoMaster(object):
 
 
                 self.move_to_point(approached_target, quaternion=rotated_quat)
-
-
-
-                if circle_goal:
-                    print("Aproched and waiting for 3 more seconds")
-                    self.observe_for_n_seconds(3)
-
 
             viewpoint_ix += 1
 
