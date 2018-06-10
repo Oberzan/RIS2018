@@ -21,6 +21,7 @@ class ClusterPoint():
 
 
     def get_discrete_color(self):
+        print(self.discrete_colors)
         try:
             return max(self.discrete_colors, key=self.discrete_colors.get)
         except ValueError:
@@ -31,6 +32,11 @@ class ClusterPoint():
         new_x = (self.n * self.x + p.x) / (self.n + 1)
         new_y = (self.n * self.y + p.y) / (self.n + 1)
         actual_data = new_data if new_data is not None else self.data
+
+        if not new_data in self.data:
+            self.data[new_data] = 1
+        else:
+            self.data[new_data] += 1
 
         if new_discrete_color:
             if self.discrete_colors == None:
