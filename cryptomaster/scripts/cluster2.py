@@ -14,7 +14,7 @@ class Clusterer():
     def __init__(self, cluster_topic, min_center_detections=15):
         self.centers = []
         self.markers = MarkerArray()
-        self.centroid_treshold = 0.6
+        self.centroid_treshold = 0.5
         self.min_center_distance = min_center_detections
         self.jobs = []
         self.jobs_created = 0
@@ -106,6 +106,8 @@ class Clusterer():
         return closest_center, min_ix
 
     def point_callback(self, marker):
+        if self.state != states.OBSERVING:
+            return
         p = marker.pose.position
         closest_center, min_ix = self.find_nearest_cluster(p, self.centroid_treshold)
         color = marker.color
