@@ -32,7 +32,8 @@ class ClusterPoint():
         actual_data = new_data if new_data is not None else self.data
 
         if new_discrete_color:
-            if not new_discrete_color in self.discrete_colors:
+
+            if self.discrete_colors == None or not new_discrete_color in self.discrete_colors:
                 self.discrete_colors[new_discrete_color] = 1
             else:
                 self.discrete_colors[new_discrete_color] += 1
