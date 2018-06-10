@@ -130,11 +130,11 @@ class Clusterer():
         else:
             discrete_color = self.calculate_color(color)
 
-        data = {marker.text : 1} if marker.text else None
+
 
         if closest_center:
             print("[Cluster] updating existing cluster")
-            new_center = closest_center.move_center(p, data, color, discrete_color)
+            new_center = closest_center.move_center(p, marker.text, color, discrete_color)
             self.centers[min_ix] = new_center
 
             if new_center.n >= self.min_center_distance and not new_center.is_visited:
@@ -142,6 +142,7 @@ class Clusterer():
                 self.centers[min_ix] = new_center
                 self.jobs.append(new_center)
         else:
+            data = {marker.text: 1} if marker.text else None
             discrete_colors = {discrete_color: 1} if discrete_color else {}
             self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
