@@ -10,9 +10,8 @@ class ClusterPoint():
         self.discrete_colors = discrete_colors
 
     def __str__(self):
-        return "[x: {}, y: {}, n: {}, is_visited: {}, color: {}, discrete_color: {}, data: {}]".format(self.x, self.y, self.n,
-                                                                                        self.is_visited,
-                                                                                        self.color, self.get_discrete_color(), self.data)
+        return "[n: {}, is_visited: {}, discrete_color: {}, data: {}]".format(self.n,
+                                                                                        self.is_visited, self.get_discrete_color(), self.data)
 
     def reset_cluster_point(self):
         return ClusterPoint(self.x, self.y, 1, True, self.color, self.discrete_colors, self.data)
@@ -22,7 +21,6 @@ class ClusterPoint():
 
 
     def get_discrete_color(self):
-        print(self.discrete_colors)
         try:
             return max(self.discrete_colors, key=self.discrete_colors.get)
         except ValueError:
