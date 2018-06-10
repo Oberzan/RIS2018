@@ -20,12 +20,18 @@ class Clusterer():
         self.current_center_index = 0
         self.kmeans = MiniBatchKMeans(n_clusters=self.num_clusters, random_state=0)
 
+        self.num_jobs_handled = 0
+
         _ = rospy.Subscriber("cluster/point", Point, self.point_callback)
         self.markers_pub = rospy.Publisher(
             'markers', MarkerArray, queue_size=1000)
 
         _ = rospy.Subscriber("cluster/request", Point, self.request_callback)
         self.circle_publisher = rospy.Publisher("cluster/goal", Point, queue_size=10)
+
+
+    def is_circle_clusterer(self):
+        return self.topic == "cluster/point"
 
     def request_callback(self, point):
         current_circle = self.kmeans.cluster_centers_[self.current_center_index]
