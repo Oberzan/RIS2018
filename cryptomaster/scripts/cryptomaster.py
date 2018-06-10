@@ -166,7 +166,7 @@ class CryptoMaster(object):
     def handle_cluster_job(self, target, clusterer):
         print("--------Handle Cluster Job--------")
 
-        circle_goal = clusterer.is_circle_clusterer()
+        circle_goal = clusterer.is_circle_cluster()
         nearest_viewpoints = self.find_nearest_viewpoints(
             target, self.robot_location)
 

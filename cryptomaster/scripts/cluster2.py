@@ -123,6 +123,7 @@ class Clusterer():
             self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
 
+        print(self.centers)
         self.publish_markers()
 
     def publish_markers(self):
