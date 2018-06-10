@@ -130,7 +130,7 @@ class Clusterer():
         else:
             discrete_color = self.calculate_color(color)
 
-        data = {json.loads(marker.text) : 1} if marker.text else None
+        data = {marker.text : 1} if marker.text else None
 
         if closest_center:
             print("[Cluster] updating existing cluster")
