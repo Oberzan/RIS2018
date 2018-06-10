@@ -1,9 +1,11 @@
 import math
 import rospy
 from geometry_msgs.msg import Twist
+import states as states
 
 
-def rotate(velocity_publisher, speed, angle, step_angle=45, clockwise=True, sleep_duration=0.1):
+
+def rotate(velocity_publisher, speed, angle, step_angle=45, clockwise=True, sleep_duration=0.1, state_func=None):
     print("Started rotating")
     # Converting from angles to radians
     relative_angle = angle * 2 * math.pi / 360
@@ -16,7 +18,9 @@ def rotate(velocity_publisher, speed, angle, step_angle=45, clockwise=True, slee
         # Rotate for step_angle
         current_angle += rotate_inner(velocity_publisher,
                                       speed, step_angle, clockwise)
+        state_func(states.OBSERVING)
         rospy.sleep(sleep_duration)
+        state_func(states.READY_FOR_GOAL)
 
 
 def rotate_inner(velocity_publisher, speed, angle, clockwise=True):
