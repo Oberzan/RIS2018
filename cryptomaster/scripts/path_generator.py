@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from geometry_msgs.msg import Point
 
-HARDCODED_POINTS = [Point(33, 92, 0), Point(13, 98, 0)]
+HARDCODED_POINTS = []
 
 
 class GoalGenerator:
@@ -29,10 +29,8 @@ class GoalGenerator:
         height, width = img.shape
         goals = []
         for y in range(self.goal_step, height, self.goal_step):
-            if y < 23:
-                continue
-            if y > 50 and y < 58:
-                continue
+            if y > 50:
+                break
 
             for x in range(self.goal_step, width, self.goal_step):
                 if self.max_num_points and len(goals) >= self.max_num_points:
