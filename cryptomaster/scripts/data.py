@@ -14,6 +14,9 @@ class ClusterPoint():
                                                                                         self.is_visited,
                                                                                         self.color, self.get_discrete_color(), self.data)
 
+    def reset_cluster_point(self):
+        return ClusterPoint(self.x, self.y, 1, True, self.color, self.discrete_colors, self.data)
+
     def __repr__(self):
         return self.__str__()
 
