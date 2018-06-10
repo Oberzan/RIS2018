@@ -205,7 +205,7 @@ class CryptoMaster(object):
                     print("Circle cluster job handler!")
                     rotated_quat = quaternion_ros
                     approached_target = get_approached_viewpoint(
-                        approached_target, improved_cluster, 0.37)
+                        approached_target, improved_cluster, 0.40)
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)

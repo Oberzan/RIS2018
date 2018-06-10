@@ -1,3 +1,4 @@
+import json
 
 class ClusterPoint():
     def __init__(self, x, y, n, is_visited=False, color=None, discrete_colors=None, data=None):
@@ -34,6 +35,10 @@ class ClusterPoint():
 
 
         if new_data:
+            d_data = json.loads(new_data)
+            if d_data.get('k', None) != None and d_data.get('points', []) == []:
+                self.data = {}
+
             if self.data == None:
                 self.data = {}
 
