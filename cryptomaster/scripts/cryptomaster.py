@@ -107,7 +107,8 @@ class CryptoMaster(object):
                         break
 
                     cylinder_target = self.cylinder_clusterer.get_next_job()
-                    self.handle_cluster_job(cylinder_target, self.cylinder_clusterer)
+                    if cylinder_target:
+                        self.handle_cluster_job(cylinder_target, self.cylinder_clusterer)
             else:
                 print("--------Not ready for cylinders--------")
                 while self.circle_clusterer.has_pending_jobs():
@@ -115,7 +116,8 @@ class CryptoMaster(object):
                         break
 
                     circle_target = self.circle_clusterer.get_next_job()
-                    self.handle_cluster_job(circle_target, self.circle_clusterer)
+                    if circle_target:
+                        self.handle_cluster_job(circle_target, self.circle_clusterer)
 
 
 
