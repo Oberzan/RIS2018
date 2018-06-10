@@ -140,7 +140,7 @@ class CryptoMaster(object):
         move_status_result = self.move_to_point(new_goal)
 
         if move_status_result == 'SUCCEEDED':
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, state_func=self.change_state)
+            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, state_func=self.change_state, sleep_duration=2)
 
 
     def move_to_point(self, goal, quaternion=None):
