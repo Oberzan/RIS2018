@@ -141,7 +141,7 @@ class CryptoMaster(object):
 
         if move_status_result == 'SUCCEEDED':
             self.change_state(states.OBSERVING)
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE)
+            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, sleep_duration=2)
             self.change_state(states.READY_FOR_GOAL)
     
 
