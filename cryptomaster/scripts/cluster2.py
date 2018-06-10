@@ -86,7 +86,7 @@ class Clusterer():
         reseted_cluster = cluster.reset_cluster_point()
         self.centers[cluster_ix] = reseted_cluster
 
-    def find_nearest_cluster(self, p):
+    def find_nearest_cluster(self, p, centroid_threshold=None):
         closest_center = None
         min_dist = 999999999
         min_ix = 0
@@ -95,18 +95,19 @@ class Clusterer():
         for center_ix, center in enumerate(self.centers):
             dist = point_distance(p, center)
             if dist < min_dist:
-                if closest_center:
-                    print("Detected in multiple centers")
+                if not centroid_threshold or (centroid_threshold and dist < centroid_threshold):
+                    if closest_center:
+                        print("Detected in multiple centers")
 
-                closest_center = center
-                min_dist = dist
-                min_ix = center_ix
+                    closest_center = center
+                    min_dist = dist
+                    min_ix = center_ix
 
         return closest_center, min_ix
 
     def point_callback(self, marker):
         p = marker.pose.position
-        closest_center, min_ix = self.find_nearest_cluster(p)
+        closest_center, min_ix = self.find_nearest_cluster(p, self.centroid_treshold)
         color = marker.color
         if color.r == 0 and color.g == 0 and color.b == 0:
             color, discrete_color = None, None
