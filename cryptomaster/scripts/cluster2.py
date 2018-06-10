@@ -151,7 +151,7 @@ class Clusterer():
         for center in self.centers:
             print(center)
         print("\n\n")
-        self.publish_markers()
+        ## self.publish_markers()
 
     def publish_markers(self):
         by_n = sorted(self.centers, key=lambda center: center.n, reverse=True)
