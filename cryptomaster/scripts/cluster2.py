@@ -14,7 +14,7 @@ class Clusterer():
     def __init__(self, cluster_topic, min_center_detections=15):
         self.centers = []
         self.markers = MarkerArray()
-        self.centroid_treshold = 0.5
+        self.centroid_treshold = 0.55
         self.min_center_distance = min_center_detections
         self.jobs = []
         self.jobs_created = 0
