@@ -165,6 +165,13 @@ class CryptoMaster(object):
         self.coins_dropped += 1
         self.state = states.READY_FOR_GOAL
 
+
+    def observe_for_n_seconds(self, n_seconds):
+        self.change_state(states.OBSERVING)
+        rospy.sleep(n_seconds)
+        self.change_state(states.CIRCLE_APPROACHED)
+
+
     def handle_cluster_job(self, target, clusterer):
         print("--------Handle Cluster Job--------")
 
@@ -193,23 +200,23 @@ class CryptoMaster(object):
                 _, cluster_ix = clusterer.find_nearest_cluster(target)
                 clusterer.reset_cluster(cluster_ix)
 
-                self.change_state(states.OBSERVING)
-                rospy.sleep(5)
-                self.change_state(states.CIRCLE_APPROACHED)
-
+                self.observe_for_n_seconds(5)
                 improved_cluster = clusterer.centers[cluster_ix]
-                print(improved_cluster)
-
-
-                if circle_goal:
-                    _, rotated_quat = rotate_quaternion(q, 90)
-                else:
-                    rotated_quat = quaternion_ros
-
                 approached_target = get_approached_viewpoint(
                     approached_target, improved_cluster, 0.305)
 
+                if circle_goal:
+                    print("Circle cluster job handler!")
+                    _, rotated_quat = rotate_quaternion(q, 90)
+                else:
+                    print("Cylinder cluster job handler")
+                    rotated_quat = quaternion_ros
+
                 self.move_to_point(approached_target, quaternion=rotated_quat)
+                if circle_goal:
+                    print("Aproched and waiting for 3 more seconds")
+                    self.observe_for_n_seconds(3)
+
 
             viewpoint_ix += 1
 

@@ -46,7 +46,8 @@ class The_Ring:
         # A help variable for holding the dimensions of the image
         self.dims = (0, 0, 0)
 
-        self.img_id = 1
+        self.original_count = 0
+        self.sharp_count = 0
 
         # Marker array object used for visualizations
         self.marker_array = MarkerArray()
@@ -130,7 +131,7 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        if not self.engine_state == "observing":
+        if self.engine_state == "observing":
            return
 
         try:
@@ -200,8 +201,22 @@ class The_Ring:
 
     def extract_data(self, warped_image):
         data = self.extract_slope(warped_image)
-        if not data:
+        if not data:            
             data = self.extract_qr(warped_image)
+            if data:
+                self.original_count+=1
+                print(data)
+                return data
+            gray = cv2.cvtColor(warped_image, cv2.COLOR_BGR2GRAY)
+            img = cv2.equalizeHist(gray)
+            blur = cv2.GaussianBlur(img,(0,0),3)
+            sharpened = cv2.addWeighted(img,2,blur,-1,0)
+            data = None
+            data = self.extract_qr(sharpened)
+            if data:
+                self.sharp_count+=1
+            print("Original: ", self.original_count)
+            print("Sharpened: ", self.sharp_count)
         if not data:
             data = self.extract_digits(warped_image)
 
