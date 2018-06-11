@@ -14,14 +14,14 @@ class Trader(object):
         return value_on_day_5, value_on_day_7, gains
 
     def merge_data(self, points):
-        merged_data = dict(points[0].data)
+        merged_data = dict(points[0].get_actual_data())
         for data_point in points[1:]:
-            data = data_point.data
+            temp_data = data_point.get_actual_data()
 
-            if data.get('k', None):
-                merged_data['k'] = data.get('k')
+            if temp_data.get('k', None):
+                merged_data['k'] = temp_data.get('k')
 
-            merged_data['points'] = (merged_data.get('points', []) + data.get('points', []))
+            merged_data['points'] = (merged_data.get('points', []) + temp_data.get('points', []))
         return merged_data
 
 
@@ -43,14 +43,16 @@ class Trader(object):
             n = p[1] - (k * p[0])
 
         d5, d7, gains = self._calculate_gains_for_line(k, n)
-        x = np.append(x, np.array([5, 7]))
-        y = np.append(y, np.array([d5, d7]))
+        ## x = np.append(x, np.array([5, 7]))
+        ## y = np.append(y, np.array([d5, d7]))
 
+        print("Color: ", color)
         print("k: ", k)
         print("n: ", n)
         print("5th day: ", d5)
         print("7th day: ", d7)
         print("Gains: ", gains)
+        print("Merged data: " , merged_data)
 
         ## plt.plot(x, y, '.')
         ## plt.plot(x, n + (k * x), '-')

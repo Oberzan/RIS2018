@@ -22,7 +22,7 @@ class Clusterer():
         self.jobs_calculated = False
         self.topic = cluster_topic
         self.num_jobs_handled = 0
-        self.finished_jobs = []
+        self.data_detected = False
 
 
         self.visualization_colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
@@ -33,8 +33,17 @@ class Clusterer():
 
         _ = rospy.Subscriber(cluster_topic, Marker, self.point_callback)
 
+    def get_best_finished_jobs(self):
+        best_jobs = sorted(self.centers, key=lambda item: sum(item.data.values()), reverse=True)[:7]
+        print("BEST JOBS:")
+        print(best_jobs)
+        return best_jobs
+
     def is_circle_cluster(self):
         return self.topic == "cluster/point"
+
+    def reset_is_data_detected(self):
+        self.data_detected = False
 
     def get_num_jobs_with_data(self):
         return len([center for center in self.centers if center.data != None])
@@ -42,8 +51,11 @@ class Clusterer():
     def create_next_job(self):
         without_data = self.get_jobs_with_no_data()
         most_ns = sorted(without_data, key=lambda center: center.n, reverse=True)
-        self.jobs.append(most_ns[0])
-        print("Creating next job!!")
+        if len(most_ns) > 0:
+            self.jobs.append(most_ns[0])
+            print("Creating next job!!")
+        else:
+            print("Create next job failed!!!!")
 
 
     def get_jobs_with_no_data(self):
@@ -59,7 +71,6 @@ class Clusterer():
         self.num_jobs_handled += 1
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
-        self.finished_jobs.append(job)
         print("Num jobs handled: ", self.num_jobs_handled)
         if job.data:
             if sum(job.data.values()) < 10:
@@ -91,7 +102,7 @@ class Clusterer():
             return 'blue'
 
     def sort_jobs(self, gains):
-        with_gains = [(job, gains.get(job.color)) for job in self.jobs]
+        with_gains = [(job, gains.get(job.get_discrete_color())) for job in self.jobs]
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)
         sorted_jobs = [job[0] for job in s]
 
@@ -146,6 +157,9 @@ class Clusterer():
             color, discrete_color = None, None
         else:
             discrete_color = self.calculate_color(color)
+
+        if marker.text:
+            self.data_detected = True
 
 
 
