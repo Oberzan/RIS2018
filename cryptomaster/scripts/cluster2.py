@@ -36,6 +36,19 @@ class Clusterer():
     def is_circle_cluster(self):
         return self.topic == "cluster/point"
 
+    def get_num_jobs_with_data(self):
+        return len([center for center in self.centers if center.data != None])
+
+    def create_next_job(self):
+        without_data = self.get_jobs_with_no_data()
+        most_ns = sorted(without_data, key=lambda center: center.n, reverse=True)
+        self.jobs.append(most_ns[0])
+        print("Creating next job!!")
+
+
+    def get_jobs_with_no_data(self):
+        return [center for center in self.centers if center.data == None]
+
     def change_state(self,state):
         self.state = state
 
@@ -43,7 +56,6 @@ class Clusterer():
         return len(self.jobs) > 0
 
     def get_next_job(self):
-
         self.num_jobs_handled += 1
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
