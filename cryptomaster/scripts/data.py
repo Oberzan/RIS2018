@@ -29,7 +29,6 @@ class ClusterPoint():
 
 
     def get_discrete_color(self):
-        print(self.discrete_colors)
         try:
             return max(self.discrete_colors, key=self.discrete_colors.get)
         except ValueError:
