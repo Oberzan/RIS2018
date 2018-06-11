@@ -34,7 +34,8 @@ class Clusterer():
         _ = rospy.Subscriber(cluster_topic, Marker, self.point_callback)
 
     def get_best_finished_jobs(self):
-        best_jobs = sorted(self.centers, key=lambda item: sum(item.data.values()), reverse=True)[:7]
+        with_data = [center for center in self.centers if center.data != None]
+        best_jobs = sorted(with_data, key=lambda item: sum(item.data.values()), reverse=True)[:7]
         print("BEST JOBS:")
         print(best_jobs)
         return best_jobs
