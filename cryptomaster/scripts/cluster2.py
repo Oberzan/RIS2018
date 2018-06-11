@@ -23,6 +23,7 @@ class Clusterer():
         self.topic = cluster_topic
         self.num_jobs_handled = 0
         self.finished_jobs = []
+        self.data_detected = False
 
 
         self.visualization_colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
@@ -36,14 +37,20 @@ class Clusterer():
     def is_circle_cluster(self):
         return self.topic == "cluster/point"
 
+    def reset_is_data_detected(self):
+        self.data_detected = False
+
     def get_num_jobs_with_data(self):
         return len([center for center in self.centers if center.data != None])
 
     def create_next_job(self):
         without_data = self.get_jobs_with_no_data()
         most_ns = sorted(without_data, key=lambda center: center.n, reverse=True)
-        self.jobs.append(most_ns[0])
-        print("Creating next job!!")
+        if len(most_ns) > 0:
+            self.jobs.append(most_ns[0])
+            print("Creating next job!!")
+        else:
+            print("Create next job failed!!!!")
 
 
     def get_jobs_with_no_data(self):
@@ -91,7 +98,7 @@ class Clusterer():
             return 'blue'
 
     def sort_jobs(self, gains):
-        with_gains = [(job, gains.get(job.color)) for job in self.jobs]
+        with_gains = [(job, gains.get(job.get_discrete_color())) for job in self.jobs]
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)
         sorted_jobs = [job[0] for job in s]
 
@@ -146,6 +153,9 @@ class Clusterer():
             color, discrete_color = None, None
         else:
             discrete_color = self.calculate_color(color)
+
+        if marker.text:
+            self.data_detected = True
 
 
 

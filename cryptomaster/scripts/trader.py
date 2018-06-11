@@ -43,14 +43,16 @@ class Trader(object):
             n = p[1] - (k * p[0])
 
         d5, d7, gains = self._calculate_gains_for_line(k, n)
-        x = np.append(x, np.array([5, 7]))
-        y = np.append(y, np.array([d5, d7]))
+        ## x = np.append(x, np.array([5, 7]))
+        ## y = np.append(y, np.array([d5, d7]))
 
+        print("Color: ", color)
         print("k: ", k)
         print("n: ", n)
         print("5th day: ", d5)
         print("7th day: ", d7)
         print("Gains: ", gains)
+        print("Merged data: " , merged_data)
 
         ## plt.plot(x, y, '.')
         ## plt.plot(x, n + (k * x), '-')

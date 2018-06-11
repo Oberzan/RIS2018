@@ -76,13 +76,14 @@ class CryptoMaster(object):
         print("Waiting for map_callback...")
 
     def is_ready_for_cylinders(self):
-        print("-----------IS READY FOR CYLINDERS----------")
+        print("-----------IS READY FOR CYLINDERS?----------")
         circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
         num_jobs_with_data = self.circle_clusterer.get_num_jobs_with_data()
 
         if circles_detected and num_jobs_with_data < NUM_CIRCLES_TO_DETECT:
+            print("Not enough clusters with data!!!")
             self.circles_approached -= 1
             self.circle_clusterer.create_next_job()
             return False
@@ -118,7 +119,7 @@ class CryptoMaster(object):
 
 
             if self.is_ready_for_cylinders():
-                print("--------Ready for cylinders--------")
+                print("--------READY FOR CYLINDERS!!!!!!!!!--------")
                 while self.cylinder_clusterer.has_pending_jobs():
                     if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                         break
@@ -194,9 +195,27 @@ class CryptoMaster(object):
         rospy.sleep(n_seconds)
         self.change_state(states.CIRCLE_APPROACHED)
 
+    def extreme_mode_for_data_handler(self, approached_target, q, cluster):
+        print("----EXTREME MODE FOR DATA HANDLER----")
+
+        _, rotated_quat_2 = rotate_quaternion(q, -10)
+
+        approached_target = get_approached_viewpoint(
+            approached_target, cluster, 0.38)
+
+        for angle in range(-15, 15, 10):
+            print("Rotating for angle: ", angle)
+            _, rotated_quat = rotate_quaternion(q, angle)
+            self.move_to_point(approached_target, quaternion=rotated_quat)
+            self.observe_for_n_seconds(1.5)
+
+            if self.circle_clusterer.data_detected:
+                print("FOUND DATA BREAKING!")
+
 
     def handle_cluster_job(self, target, clusterer):
         print("--------Handle Cluster Job--------")
+        self.circle_clusterer.reset_is_data_detected()
 
         circle_goal = clusterer.is_circle_cluster()
         nearest_viewpoints = self.find_nearest_viewpoints(
@@ -228,15 +247,14 @@ class CryptoMaster(object):
 
                 if circle_goal:
                     print("Circle cluster job handler!")
-                    rotated_quat = quaternion_ros
+                    if not self.circle_clusterer.data_detected:
+                        self.extreme_mode_for_data_handler()
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
                     approached_target = get_approached_viewpoint(
                         approached_target, improved_cluster, 0.305)
-
-
-                self.move_to_point(approached_target, quaternion=rotated_quat)
+                    self.move_to_point(approached_target, quaternion=rotated_quat)
 
             viewpoint_ix += 1
 
