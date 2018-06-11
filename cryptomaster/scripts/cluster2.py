@@ -123,8 +123,8 @@ class Clusterer():
         return closest_center, min_ix
 
     def point_callback(self, marker):
-        if self.state != states.OBSERVING:
-            return
+        ## if self.state != states.OBSERVING:
+        ##    return
         p = marker.pose.position
         closest_center = None
         min_dist = 999999999
