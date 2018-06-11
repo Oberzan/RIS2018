@@ -199,7 +199,7 @@ class CryptoMaster(object):
     def extreme_mode_for_data_handler(self):
         print("----EXTREME MODE FOR DATA HANDLER----")
 
-        rotate(self.velocity_publisher, ROTATE_SPEED, -15, step_angle=15, clockwise=False, state_func=self.change_state, sleep_duration=2)
+        rotate(self.velocity_publisher, ROTATE_SPEED, 15, step_angle=15, clockwise=False, state_func=self.change_state, sleep_duration=2)
         if self.circle_clusterer.data_detected:
             print("FOUND DATA BREAKING!")
             return
