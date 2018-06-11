@@ -14,3 +14,4 @@ MANIPULATE_HAND = "manipulate_hand"
 GOALS_VISITED = "goals_visited"
 
 READY_FOR_CYLINDERS = "ready_for_cylinders"
+HANDLING_CLUSTER_JOBS = "handling_cluster_jobs"

@@ -81,11 +81,12 @@ class CryptoMaster(object):
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
 
-
         if circles_detected and not jobs_calculated:
             print("Calculating jobs!!")
             gains = self.trader.get_job_gains(self.circle_clusterer.finished_jobs)
             self.cylinder_clusterer.sort_jobs(gains)
+            self.change_state(states.HANDLING_CLUSTER_JOBS)
+            jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
         return circles_detected and jobs_calculated
 
@@ -118,6 +119,8 @@ class CryptoMaster(object):
                     cylinder_target = self.cylinder_clusterer.get_next_job()
                     if cylinder_target:
                         self.handle_cluster_job(cylinder_target, self.cylinder_clusterer)
+                    else:
+                        print("No cylinder job")
             else:
                 print("--------Not ready for cylinders--------")
                 while self.circle_clusterer.has_pending_jobs():
@@ -127,6 +130,8 @@ class CryptoMaster(object):
                     circle_target = self.circle_clusterer.get_next_job()
                     if circle_target:
                         self.handle_cluster_job(circle_target, self.circle_clusterer)
+                    else:
+                        print("No circle job")
 
 
 
