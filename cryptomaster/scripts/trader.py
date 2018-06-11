@@ -28,8 +28,10 @@ class Trader(object):
     def _calculate_gains(self, color, group):
         data_points = list(group)
         merged_data = self.merge_data(data_points)
-        print("Merged data: ", merged_data)
         print("Color: ", color)
+        print("Merged data: ", merged_data)
+        print("Data points: ", data_points)
+
 
         points = merged_data.get('points', [])
         x = np.array([p[0] for p in points])
