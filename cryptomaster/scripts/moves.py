@@ -34,8 +34,7 @@ def rotate_inner(velocity_publisher, speed, angle, clockwise=True):
     vel_msg.linear.z = 0
     vel_msg.angular.x = 0
     vel_msg.angular.y = 0
-    vel_msg.angular.z = - \
-        abs(angular_speed) if clockwise else abs(angular_speed)
+    vel_msg.angular.z = - abs(angular_speed) if clockwise else abs(angular_speed)
 
     # Setting the current time for distance calculus
     t0 = rospy.Time.now().to_sec()
