@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from geometry_msgs.msg import Point
 
-HARDCODED_POINTS = [Point(33, 92, 0), Point(13, 98, 0)]
+HARDCODED_POINTS = [Point(33, 92, 0), Point(13, 98, 0), Point(45, 83, 0)]
 
 
 class GoalGenerator:
