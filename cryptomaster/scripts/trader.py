@@ -28,14 +28,22 @@ class Trader(object):
     def _calculate_gains(self, color, group):
         data_points = list(group)
         merged_data = self.merge_data(data_points)
+        print("Merged data: ", merged_data)
+        print("Color: ", color)
 
         points = merged_data.get('points', [])
         x = np.array([p[0] for p in points])
         y = np.array([p[1] for p in points])
-        if len(points) > 1:
+        if len(points) > 2:
             print("Calculating from multiple points")
             print("Points: ", points)
             k, n = polyfit(x, y, 1)
+            print(k, n)
+        elif len(points) == 2:
+            p0 = points[0]
+            p1 = points[1]
+            k = (p1[1] - p0[1]) / (p1[0] - p0[0])
+            n = p1[1] - (p1[0] * k)
         else:
             print("Calculating from k and one point")
             k = merged_data.get('k')
@@ -46,13 +54,11 @@ class Trader(object):
         ## x = np.append(x, np.array([5, 7]))
         ## y = np.append(y, np.array([d5, d7]))
 
-        print("Color: ", color)
         print("k: ", k)
         print("n: ", n)
         print("5th day: ", d5)
         print("7th day: ", d7)
         print("Gains: ", gains)
-        print("Merged data: " , merged_data)
 
         ## plt.plot(x, y, '.')
         ## plt.plot(x, n + (k * x), '-')
