@@ -103,7 +103,8 @@ class Clusterer():
             return 'blue'
 
     def sort_jobs(self, gains):
-        with_gains = [(job, gains.get(job.get_discrete_color())) for job in self.jobs]
+        best_candidates = sorted(self.jobs, key=lambda item: item.n, reverse=True)[:3]
+        with_gains = [(job, gains.get(job.get_discrete_color())) for job in best_candidates]
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)
         sorted_jobs = [job[0] for job in s]
 
