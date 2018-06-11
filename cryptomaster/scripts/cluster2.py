@@ -1,14 +1,13 @@
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 import rospy
-from geometry_msgs.msg import Point, Vector3, Pose
+from geometry_msgs.msg import, Vector3, Pose
 from util import point_distance
 from data import ClusterPoint
 import states as states
-import json
 import colorsys
 from itertools import groupby
-
+from constants import NUM_CYLINDERS_TO_APPROACH
 
 
 class Clusterer():
@@ -25,7 +24,6 @@ class Clusterer():
         self.topic = cluster_topic
         self.num_jobs_handled = 0
         self.data_detected = False
-
 
         self.visualization_colors = [ColorRGBA(255, 0, 0, 1), ColorRGBA(
             255, 255, 0, 1), ColorRGBA(0, 0, 255, 1)]
@@ -60,11 +58,10 @@ class Clusterer():
         else:
             print("Create next job failed!!!!")
 
-
     def get_jobs_with_no_data(self):
         return [center for center in self.centers if center.data == None]
 
-    def change_state(self,state):
+    def change_state(self, state):
         self.state = state
 
     def has_pending_jobs(self):
@@ -115,10 +112,18 @@ class Clusterer():
         return l
 
     def sort_jobs(self, gains):
-        best_candidates = self.get_best_cylinders(self.jobs)
+        print("---------SORTING JOBS----------")
+        if len(self.jobs) < NUM_CYLINDERS_TO_APPROACH:
+            best_candidates = self.get_best_cylinders(self.centers)
+        else:
+            best_candidates = self.get_best_cylinders(self.jobs)
+
         with_gains = [(job, gains.get(job.get_discrete_color())) for job in best_candidates]
+        print("WITH GAINS: ", with_gains)
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)
         sorted_jobs = [job[0] for job in s]
+
+        print("Sorted jobs: ", sorted_jobs)
 
         self.jobs = sorted_jobs
         self.jobs_calculated = True
@@ -132,7 +137,6 @@ class Clusterer():
         closest_center = None
         min_dist = 999999999
         min_ix = 0
-
 
         for center_ix, center in enumerate(self.centers):
             dist = point_distance(p, center)
@@ -165,7 +169,6 @@ class Clusterer():
                 min_dist = dist
                 min_ix = center_ix
 
-
         color = marker.color
         if color.r == 0 and color.g == 0 and color.b == 0:
             color, discrete_color = None, None
@@ -174,8 +177,6 @@ class Clusterer():
 
         if marker.text:
             self.data_detected = True
-
-
 
         if closest_center:
             print("[Cluster] updating existing cluster")
@@ -190,9 +191,8 @@ class Clusterer():
         else:
             data = {marker.text: 1} if marker.text else None
             discrete_colors = {discrete_color: 1} if discrete_color else {}
-            self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
+            self.centers.append(ClusterPoint(p.x, p.y, 1, False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
-
 
         if self.is_circle_cluster():
             print("--------CIRCLES----------")
