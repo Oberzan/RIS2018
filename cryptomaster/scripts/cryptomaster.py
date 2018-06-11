@@ -93,7 +93,7 @@ class CryptoMaster(object):
             print("Calculating jobs!!")
             gains = self.trader.get_job_gains(self.circle_clusterer.get_best_finished_jobs())
             self.cylinder_clusterer.sort_jobs(gains)
-            self.change_state(states.HANDLING_CLUSTER_JOBS)
+            self.change_state(states.READY_FOR_CYLINDERS)
             jobs_calculated = self.cylinder_clusterer.jobs_calculated
 
         return circles_detected and jobs_calculated
@@ -124,6 +124,7 @@ class CryptoMaster(object):
                     if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                         break
 
+                    self.change_state(states.HANDLING_CLUSTER_JOBS)
                     cylinder_target = self.cylinder_clusterer.get_next_job()
                     if cylinder_target:
                         self.handle_cluster_job(cylinder_target, self.cylinder_clusterer)
