@@ -118,6 +118,8 @@ class Clusterer():
         else:
             best_candidates = self.get_best_cylinders(self.jobs)
 
+        print("BEST CANDIDATES: ", best_candidates)
+
         with_gains = [(job, gains.get(job.get_discrete_color())) for job in best_candidates]
         print("WITH GAINS: ", with_gains)
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)

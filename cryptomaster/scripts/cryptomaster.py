@@ -120,7 +120,7 @@ class CryptoMaster(object):
 
             if self.is_ready_for_cylinders():
                 print("--------READY FOR CYLINDERS!!!!!!!!!--------")
-                while self.cylinder_clusterer.has_pending_jobs():
+                while self.cylinder_clusterer.jobs_calculated and self.cylinder_clusterer.has_pending_jobs():
                     if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                         break
 
