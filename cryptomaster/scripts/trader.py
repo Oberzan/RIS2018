@@ -59,6 +59,8 @@ class Trader(object):
 
 
     def get_job_gains(self, data_points):
+        print("DATA POINTS: ")
+        print(data_points)
         groups = groupby(data_points, lambda data_point: (data_point.discrete_color))
         res = {}
         for key, group in groups:
