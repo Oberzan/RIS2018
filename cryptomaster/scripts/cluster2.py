@@ -113,10 +113,7 @@ class Clusterer():
 
     def sort_jobs(self, gains):
         print("---------SORTING JOBS----------")
-        if len(self.jobs) < NUM_CYLINDERS_TO_APPROACH:
-            best_candidates = self.get_best_cylinders(self.centers)
-        else:
-            best_candidates = self.get_best_cylinders(self.jobs)
+        best_candidates = self.get_best_cylinders(self.centers)
 
         print("BEST CANDIDATES: ", best_candidates)
 
@@ -189,7 +186,8 @@ class Clusterer():
             if new_center.n >= self.min_center_distance and not new_center.is_visited:
                 new_center.is_visited = True
                 self.centers[min_ix] = new_center
-                self.jobs.append(new_center)
+                if self.is_circle_cluster():
+                    self.jobs.append(new_center)
         else:
             data = {marker.text: 1} if marker.text else None
             discrete_colors = {discrete_color: 1} if discrete_color else {}
