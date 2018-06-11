@@ -243,7 +243,7 @@ class CryptoMaster(object):
         if circle_goal:
             print("Moved to circle target!")
             self.circles_approached += 1
-            self.state = states.READY_FOR_GOAL
+            self.change_state(states.READY_FOR_GOAL)
         else:
             self.say("Cylinder detected", 3)
             self.cylinder_approached_handler()
