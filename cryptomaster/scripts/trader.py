@@ -11,6 +11,9 @@ class Trader(object):
         value_on_day_5 = k * 5 + n
         value_on_day_7 = k * 7 + n
         gains = value_on_day_7 / value_on_day_5
+        if value_on_day_5 <= 0:
+            return value_on_day_5, value_on_day_7, 0
+        
         return value_on_day_5, value_on_day_7, gains
 
     def merge_data(self, points):
@@ -71,6 +74,7 @@ class Trader(object):
     def get_job_gains(self, data_points):
         print("DATA POINTS: ")
         print(data_points)
+        data_points = sorted(data_points, key=lambda item: item.get_discrete_color())
         groups = groupby(data_points, lambda data_point: (data_point.get_discrete_color()))
         res = {}
         for key, group in groups:
