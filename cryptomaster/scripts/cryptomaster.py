@@ -249,7 +249,7 @@ class CryptoMaster(object):
                 if circle_goal:
                     print("Circle cluster job handler!")
                     if not self.circle_clusterer.data_detected:
-                        self.extreme_mode_for_data_handler()
+                        self.extreme_mode_for_data_handler(approached_target, q, improved_cluster)
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
