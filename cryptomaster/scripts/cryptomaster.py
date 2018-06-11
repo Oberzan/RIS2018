@@ -35,7 +35,7 @@ class CryptoMaster(object):
                                             goal_step=rospy.get_param('~step'))
 
         self.hand_manipulator = HandManipulator()
-        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=30)
+        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=20)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
 
