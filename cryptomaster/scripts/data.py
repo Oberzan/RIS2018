@@ -20,6 +20,13 @@ class ClusterPoint():
     def __repr__(self):
         return self.__str__()
 
+    def get_actual_data(self):
+        try:
+            return json.loads(max(self.data, key=self.data.get))
+        except ValueError as e:
+            print(e)
+            return None
+
 
     def get_discrete_color(self):
         print(self.discrete_colors)

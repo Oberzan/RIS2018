@@ -14,14 +14,14 @@ class Trader(object):
         return value_on_day_5, value_on_day_7, gains
 
     def merge_data(self, points):
-        merged_data = dict(points[0].data)
+        merged_data = dict(points[0].get_actual_data())
         for data_point in points[1:]:
-            data = data_point.data
+            temp_data = data_point.get_actual_data()
 
-            if data.get('k', None):
-                merged_data['k'] = data.get('k')
+            if temp_data.get('k', None):
+                merged_data['k'] = temp_data.get('k')
 
-            merged_data['points'] = (merged_data.get('points', []) + data.get('points', []))
+            merged_data['points'] = (merged_data.get('points', []) + temp_data.get('points', []))
         return merged_data
 
 
