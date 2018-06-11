@@ -199,8 +199,6 @@ class CryptoMaster(object):
     def extreme_mode_for_data_handler(self, approached_target, q, cluster):
         print("----EXTREME MODE FOR DATA HANDLER----")
 
-        _, rotated_quat_2 = rotate_quaternion(q, -10)
-
         approached_target = get_approached_viewpoint(
             approached_target, cluster, 0.38)
 
@@ -212,6 +210,8 @@ class CryptoMaster(object):
 
             if self.circle_clusterer.data_detected:
                 print("FOUND DATA BREAKING!")
+
+        print("FOUNNT NO DATA AFTER EXTREME MODE!")
 
 
     def handle_cluster_job(self, target, clusterer):
@@ -249,7 +249,7 @@ class CryptoMaster(object):
                 if circle_goal:
                     print("Circle cluster job handler!")
                     if not self.circle_clusterer.data_detected:
-                        self.extreme_mode_for_data_handler()
+                        self.extreme_mode_for_data_handler(approached_target, q, improved_cluster)
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
