@@ -180,7 +180,12 @@ class Clusterer():
             self.centers.append(ClusterPoint(p.x, p.y, 1,False, color, discrete_colors, data))
             print("[Cluster] Adding new center")
 
-        print("--------PRINTING CENTERS----------")
+
+        if self.is_circle_cluster():
+            print("--------CIRCLES----------")
+        else:
+            print("--------CYLINDERS----------")
+
         for center in self.centers:
             print(center)
         print("\n\n")
