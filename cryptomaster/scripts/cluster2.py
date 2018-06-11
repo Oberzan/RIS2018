@@ -7,6 +7,8 @@ from data import ClusterPoint
 import states as states
 import json
 import colorsys
+from itertools import groupby
+
 
 
 class Clusterer():
@@ -102,8 +104,18 @@ class Clusterer():
         else:
             return 'blue'
 
+    def get_best_cylinders(self, data_points):
+        data_points = sorted(data_points, key=lambda item: item.get_discrete_color())
+        groups = groupby(data_points, lambda data_point: (data_point.get_discrete_color()))
+
+        l = []
+        for color, group in groups:
+            max_n = max(group, key=lambda item: item.n)
+            l.append(max_n)
+        return l
+
     def sort_jobs(self, gains):
-        best_candidates = sorted(self.jobs, key=lambda item: item.n, reverse=True)[:3]
+        best_candidates = self.get_best_cylinders(self.jobs)
         with_gains = [(job, gains.get(job.get_discrete_color())) for job in best_candidates]
         s = sorted(with_gains, key=lambda x: x[1], reverse=True)
         sorted_jobs = [job[0] for job in s]
