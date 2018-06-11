@@ -166,6 +166,7 @@ class Clusterer():
         if closest_center:
             print("[Cluster] updating existing cluster")
             new_center = closest_center.move_center(p, marker.text, color, discrete_color)
+
             self.centers[min_ix] = new_center
 
             if new_center.n >= self.min_center_distance and not new_center.is_visited:

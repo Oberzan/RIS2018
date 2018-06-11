@@ -196,20 +196,19 @@ class CryptoMaster(object):
         rospy.sleep(n_seconds)
         self.change_state(states.CIRCLE_APPROACHED)
 
-    def extreme_mode_for_data_handler(self, approached_target, q, cluster):
+    def extreme_mode_for_data_handler(self):
         print("----EXTREME MODE FOR DATA HANDLER----")
 
-        approached_target = get_approached_viewpoint(
-            approached_target, cluster, 0.38)
+        rotate(self.velocity_publisher, ROTATE_SPEED, -15, clockwise=False, state_func=self.change_state, sleep_duration=2)
+        if self.circle_clusterer.data_detected:
+            print("FOUND DATA BREAKING!")
+            return
 
-        for angle in range(-15, 15, 10):
-            print("Rotating for angle: ", angle)
-            _, rotated_quat = rotate_quaternion(q, angle)
-            self.move_to_point(approached_target, quaternion=rotated_quat)
-            self.observe_for_n_seconds(1.5)
-
+        for i in range(3):
+            rotate(self.velocity_publisher, ROTATE_SPEED, 10, clockwise=True, state_func=self.change_state, sleep_duration=2)
             if self.circle_clusterer.data_detected:
                 print("FOUND DATA BREAKING!")
+                return
 
         print("FOUNNT NO DATA AFTER EXTREME MODE!")
 
@@ -249,7 +248,7 @@ class CryptoMaster(object):
                 if circle_goal:
                     print("Circle cluster job handler!")
                     if not self.circle_clusterer.data_detected:
-                        self.extreme_mode_for_data_handler(approached_target, q, improved_cluster)
+                        self.extreme_mode_for_data_handler()
                 else:
                     print("Cylinder cluster job handler")
                     _, rotated_quat = rotate_quaternion(q, 90)
@@ -341,7 +340,9 @@ class CryptoMaster(object):
 def main():
     crypto_robot = CryptoMaster()
     #crypto_robot.hand_manipulator.move_to_standby()
-    crypto_robot.run_robot()
+    crypto_robot.extreme_mode_for_data_handler()
+    # crypto_robot.run_robot()
+
     # crypto_robot.hand_manipulator.grab_coin(0)
     # crypto_robot.hand_manipulator.drop_coin()
     # crypto_robot.hand_manipulator.grab_coin(1)
