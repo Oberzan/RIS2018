@@ -50,6 +50,10 @@ class Clusterer():
         self.finished_jobs.append(job)
         print("Num jobs handled: ", self.num_jobs_handled)
         if job.data:
+            if sum(job.data.values()) < 10:
+                print("Less than 10 warped images job!!")
+                return job
+
             print("JOB HAS DATA - GETTING NEXT job")
             print(job)
             if self.has_pending_jobs():

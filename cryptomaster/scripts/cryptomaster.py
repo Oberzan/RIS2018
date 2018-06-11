@@ -153,6 +153,7 @@ class CryptoMaster(object):
             return
         self.goals_left.remove(new_goal)
         print(len(self.goals_left), " goals left.")
+        self.robot_location = new_goal
 
         move_status_result = self.move_to_point(new_goal)
 
@@ -169,7 +170,7 @@ class CryptoMaster(object):
 
         status = ACTION_CLIENT_STATUSES[self.action_client.get_state()]
         print("Action result: ", status)
-        self.robot_location = goal
+
         return status
 
     def cylinder_approached_handler(self):
