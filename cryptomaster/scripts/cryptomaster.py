@@ -77,8 +77,15 @@ class CryptoMaster(object):
 
     def is_ready_for_cylinders(self):
         print("-----------IS READY FOR CYLINDERS----------")
-        circles_detected = self.circle_clusterer.num_jobs_handled >= 7
+        circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
+
+        num_jobs_with_data = self.circle_clusterer.get_num_jobs_with_data()
+
+        if num_jobs_with_data < NUM_CIRCLES_TO_DETECT:
+            self.circles_approached -= 1
+            self.circle_clusterer.create_next_job()
+            return False
 
 
         if circles_detected and not jobs_calculated:
