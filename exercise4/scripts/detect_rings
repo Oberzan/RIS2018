@@ -131,7 +131,7 @@ class The_Ring:
         self.markers_pub.publish(self.marker_array)
 
     def image_callback(self, data):
-        if self.engine_state == "observing":
+        if not self.engine_state == "observing":
            return
 
         try:
@@ -352,7 +352,7 @@ class The_Ring:
             0.22 < abs(minoraxis1/minoraxis2-1) < 0.32 and
             abs(minoraxis1/majoraxis2-1) < 0.65 and
             abs(majoraxis1/minoraxis2-1) < 0.35 and
-            20 < minoraxis1 and
+            35 < minoraxis1 and
                 np.sqrt(((x1 - x2) ** 2 + (y1 - y2) ** 2)) < 5):
             return [(e1, e2)]
         return []

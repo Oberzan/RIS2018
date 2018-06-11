@@ -340,8 +340,8 @@ class CryptoMaster(object):
 def main():
     crypto_robot = CryptoMaster()
     #crypto_robot.hand_manipulator.move_to_standby()
-    crypto_robot.extreme_mode_for_data_handler()
-    # crypto_robot.run_robot()
+    # crypto_robot.extreme_mode_for_data_handler()
+    crypto_robot.run_robot()
 
     # crypto_robot.hand_manipulator.grab_coin(0)
     # crypto_robot.hand_manipulator.drop_coin()
