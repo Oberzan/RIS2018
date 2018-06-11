@@ -22,7 +22,6 @@ class Clusterer():
         self.jobs_calculated = False
         self.topic = cluster_topic
         self.num_jobs_handled = 0
-        self.finished_jobs = []
         self.data_detected = False
 
 
@@ -33,6 +32,12 @@ class Clusterer():
             'markers', MarkerArray, queue_size=1000)
 
         _ = rospy.Subscriber(cluster_topic, Marker, self.point_callback)
+
+    def get_best_finished_jobs(self):
+        best_jobs = sorted(self.centers, key=lambda item: sum(item.data.values()), reverse=True)[:7]
+        print("BEST JOBS:")
+        print(best_jobs)
+        return best_jobs
 
     def is_circle_cluster(self):
         return self.topic == "cluster/point"
@@ -66,7 +71,6 @@ class Clusterer():
         self.num_jobs_handled += 1
         job = self.jobs[0]
         self.jobs = self.jobs[1:]
-        self.finished_jobs.append(job)
         print("Num jobs handled: ", self.num_jobs_handled)
         if job.data:
             if sum(job.data.values()) < 10:

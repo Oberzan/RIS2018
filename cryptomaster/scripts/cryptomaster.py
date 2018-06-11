@@ -91,7 +91,7 @@ class CryptoMaster(object):
 
         if circles_detected and not jobs_calculated:
             print("Calculating jobs!!")
-            gains = self.trader.get_job_gains(self.circle_clusterer.finished_jobs)
+            gains = self.trader.get_job_gains(self.circle_clusterer.get_best_finished_jobs())
             self.cylinder_clusterer.sort_jobs(gains)
             self.change_state(states.HANDLING_CLUSTER_JOBS)
             jobs_calculated = self.cylinder_clusterer.jobs_calculated
