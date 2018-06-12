@@ -184,8 +184,8 @@ class CryptoMaster(object):
 
     def cylinder_approached_handler(self):
         print("--------Cylinder Approached Handle--------")
-        self.hand_manipulator.grab_coin(self.coins_dropped)
-        self.hand_manipulator.drop_coin()
+        # self.hand_manipulator.grab_coin(self.coins_dropped)
+        # self.hand_manipulator.drop_coin()
         self.say("Kobe dunks!", 1)
         self.coins_dropped += 1
         self.state = states.READY_FOR_GOAL
