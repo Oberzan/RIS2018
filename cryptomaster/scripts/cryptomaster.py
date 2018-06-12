@@ -14,7 +14,8 @@ from util import flip, nearest_goal, point_2_base_goal, point_distance, quaterni
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Twist
 import states as states
-from constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, NUM_CYLINDERS_TO_APPROACH
+from constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, \
+    NUM_CYLINDERS_TO_APPROACH
 from moves import rotate
 from cluster2 import Clusterer
 from trader import Trader
@@ -34,7 +35,7 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        #self.hand_manipulator = HandManipulator()
+        self.hand_manipulator = HandManipulator()
         self.circle_clusterer = Clusterer("cluster/point", min_center_detections=18)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
@@ -67,13 +68,12 @@ class CryptoMaster(object):
         self.engine_state_publisher = rospy.Publisher(
             "engine/status", String, queue_size=10)
 
-
     def goals_visited_handler(self):
-        print("GOALS VISITED HANDLER")
+        print("-------------GOALS VISITED HANDLER------------")
         self.change_state(states.READY_FOR_CYLINDERS)
 
     def map_state_handler(self):
-        print("Waiting for map_callback...")
+        print("----------WAITING FOR MAP_CALLBACK------------")
 
     def is_ready_for_cylinders(self):
         print("-----------IS READY FOR CYLINDERS?----------")
@@ -84,12 +84,12 @@ class CryptoMaster(object):
         circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         num_jobs_with_data = self.circle_clusterer.get_num_jobs_with_data()
 
-        if (self.goals_left and len(self.goals_left) == 0) or (circles_detected and num_jobs_with_data < NUM_CIRCLES_TO_DETECT):
+        if (self.goals_left and len(self.goals_left) == 0) or (
+                circles_detected and num_jobs_with_data < NUM_CIRCLES_TO_DETECT):
             print("Not enough clusters with data!!!")
             self.circles_approached -= 1
             self.circle_clusterer.create_next_job()
             return False
-
 
         if circles_detected:
             print("Calculating jobs!!")
@@ -119,7 +119,6 @@ class CryptoMaster(object):
             else:
                 print("UNKNOWN STATE: ", self.state)
 
-
             if self.is_ready_for_cylinders():
                 print("--------READY FOR CYLINDERS!!!!!!!!!--------")
                 while self.cylinder_clusterer.jobs_calculated and self.cylinder_clusterer.has_pending_jobs():
@@ -144,12 +143,9 @@ class CryptoMaster(object):
                     else:
                         print("No circle job")
 
-
-
             if self.coins_dropped == NUM_CYLINDERS_TO_APPROACH:
                 self.say("Die puny humans.")
                 break
-
 
             rate.sleep()
 
@@ -157,11 +153,11 @@ class CryptoMaster(object):
 
     def ready_for_goal_state_handler(self):
         print("--------Ready For Goal State Handler--------")
-        new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
-        print("Got new goal: ", new_goal)
         if len(self.goals_left) == 0:
             self.change_state(states.GOALS_VISITED)
             return
+        new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
+        print("Got new goal: ", new_goal)
         self.goals_left.remove(new_goal)
         print(len(self.goals_left), " goals left.")
         self.robot_location = new_goal
@@ -170,7 +166,6 @@ class CryptoMaster(object):
 
         if move_status_result == 'SUCCEEDED':
             rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, state_func=self.change_state, sleep_duration=2)
-
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
@@ -186,12 +181,11 @@ class CryptoMaster(object):
 
     def cylinder_approached_handler(self):
         print("--------Cylinder Approached Handle--------")
-        # self.hand_manipulator.grab_coin(self.coins_dropped)
-        # self.hand_manipulator.drop_coin()
+        self.hand_manipulator.grab_coin(self.coins_dropped)
+        self.hand_manipulator.drop_coin()
         self.say("Kobe dunks!", 1)
         self.coins_dropped += 1
-        self.state = states.READY_FOR_GOAL
-
+        self.change_state(states.READY_FOR_GOAL)
 
     def observe_for_n_seconds(self, n_seconds):
         self.change_state(states.OBSERVING)
@@ -201,19 +195,20 @@ class CryptoMaster(object):
     def extreme_mode_for_data_handler(self):
         print("----EXTREME MODE FOR DATA HANDLER----")
 
-        rotate(self.velocity_publisher, ROTATE_SPEED, 30, step_angle=30, clockwise=False, state_func=self.change_state, sleep_duration=2)
+        rotate(self.velocity_publisher, ROTATE_SPEED, 30, step_angle=30, clockwise=False, state_func=self.change_state,
+               sleep_duration=2)
         if self.circle_clusterer.data_detected:
             print("FOUND DATA BREAKING!")
             return
 
         for i in range(3):
-            rotate(self.velocity_publisher, ROTATE_SPEED, 20, step_angle=20, clockwise=True, state_func=self.change_state, sleep_duration=2)
+            rotate(self.velocity_publisher, ROTATE_SPEED, 20, step_angle=20, clockwise=True,
+                   state_func=self.change_state, sleep_duration=2)
             if self.circle_clusterer.data_detected:
                 print("FOUND DATA BREAKING!")
                 return
 
         print("FOUNNT NO DATA AFTER EXTREME MODE!")
-
 
     def handle_cluster_job(self, target, clusterer):
         print("--------Handle Cluster Job--------")
@@ -341,16 +336,8 @@ class CryptoMaster(object):
 
 def main():
     crypto_robot = CryptoMaster()
-    #crypto_robot.hand_manipulator.move_to_standby()
-    # crypto_robot.extreme_mode_for_data_handler()
+    crypto_robot.hand_manipulator.move_to_standby()
     crypto_robot.run_robot()
-
-    # crypto_robot.hand_manipulator.grab_coin(0)
-    # crypto_robot.hand_manipulator.drop_coin()
-    # crypto_robot.hand_manipulator.grab_coin(1)
-    # crypto_robot.hand_manipulator.drop_coin()
-    # crypto_robot.hand_manipulator.grab_coin(2)
-    # crypto_robot.hand_manipulator.drop_coin()
 
 
 if __name__ == '__main__':
