@@ -6,6 +6,7 @@ from openservorobot.msg import ManipulatorDescriptionM
 class HandManipulator(object):
 
     def __init__(self):
+        print("!!")
         desc = rospy.wait_for_message("openservorobot/manipulator_description", ManipulatorDescriptionM)
 
         self.mappings = {}

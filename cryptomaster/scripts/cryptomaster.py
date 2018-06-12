@@ -30,10 +30,10 @@ class CryptoMaster(object):
         rospy.init_node('cryptomaster')
         self.state = states.WAITING_FOR_MAP
         self.action_client = SimpleActionClient("move_base", MoveBaseAction)
-        self.action_client.wait_for_server()
+        #self.action_client.wait_for_server()
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
-
+        
         self.hand_manipulator = HandManipulator()
         self.circle_clusterer = Clusterer("cluster/point", min_center_detections=20)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
