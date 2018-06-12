@@ -15,7 +15,7 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Point, Twist
 import states as states
 from constants import GOAL_RESULT_TIMEOUT, ACTION_CLIENT_STATUSES, ROTATE_ANGLE, ROTATE_SPEED, NUM_CIRCLES_TO_DETECT, \
-    NUM_CYLINDERS_TO_APPROACH
+    NUM_CYLINDERS_TO_APPROACH, NUM_CYLINDERS
 from moves import rotate
 from cluster2 import Clusterer
 from trader import Trader
@@ -36,8 +36,8 @@ class CryptoMaster(object):
                                             goal_step=rospy.get_param('~step'))
 
         self.hand_manipulator = HandManipulator()
-        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=18)
-        self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
+        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=18, expected_clusters_count=NUM_CIRCLES_TO_DETECT)
+        self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15, expected_clusters_count=NUM_CYLINDERS)
         self.trader = Trader()
 
         self.cv_map = None
