@@ -34,7 +34,7 @@ class CryptoMaster(object):
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
-        self.hand_manipulator = HandManipulator()
+        # self.hand_manipulator = HandManipulator()
         self.circle_clusterer = Clusterer("cluster/point", min_center_detections=20)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
@@ -155,37 +155,17 @@ class CryptoMaster(object):
 
     def ready_for_goal_state_handler(self):
         print("--------Ready For Goal State Handler--------")
-        new_goal, _ = nearest_goal(self.robot_location, self.goals_left)
-        print("Got new goal: ", new_goal)
-        if len(self.goals_left) == 0:
-            self.change_state(states.GOALS_VISITED)
-            return
-        self.goals_left.remove(new_goal)
-        print(len(self.goals_left), " goals left.")
-        self.robot_location = new_goal
-
-        move_status_result = self.move_to_point(new_goal)
-
-        if move_status_result == 'SUCCEEDED':
-            rotate(self.velocity_publisher, ROTATE_SPEED, ROTATE_ANGLE, state_func=self.change_state, sleep_duration=2)
+        pass
 
 
     def move_to_point(self, goal, quaternion=None):
         print("--------Moving To Point--------")
-        move_base_goal = point_2_base_goal(goal, orientation=quaternion)
-        self.action_client.send_goal(move_base_goal)
-        self.action_client.wait_for_result(
-            rospy.Duration(GOAL_RESULT_TIMEOUT))
-
-        status = ACTION_CLIENT_STATUSES[self.action_client.get_state()]
-        print("Action result: ", status)
-
-        return status
+        return ""
 
     def cylinder_approached_handler(self):
         print("--------Cylinder Approached Handle--------")
-        self.hand_manipulator.grab_coin(self.coins_dropped)
-        self.hand_manipulator.drop_coin()
+        #self.hand_manipulator.grab_coin(self.coins_dropped)
+        #self.hand_manipulator.drop_coin()
         self.say("Kobe dunks!", 1)
         self.coins_dropped += 1
         self.state = states.READY_FOR_GOAL
@@ -339,7 +319,7 @@ class CryptoMaster(object):
 
 def main():
     crypto_robot = CryptoMaster()
-    crypto_robot.hand_manipulator.move_to_standby()
+    # crypto_robot.hand_manipulator.move_to_standby()
     # crypto_robot.extreme_mode_for_data_handler()
     crypto_robot.run_robot()
 
