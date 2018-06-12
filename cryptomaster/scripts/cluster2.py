@@ -1,7 +1,7 @@
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 import rospy
-from geometry_msgs.msg import, Vector3, Pose
+from geometry_msgs.msg import Vector3, Pose
 from util import point_distance
 from data import ClusterPoint
 import states as states
