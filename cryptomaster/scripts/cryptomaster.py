@@ -35,7 +35,7 @@ class CryptoMaster(object):
                                             goal_step=rospy.get_param('~step'))
 
         #self.hand_manipulator = HandManipulator()
-        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=20)
+        self.circle_clusterer = Clusterer("cluster/point", min_center_detections=18)
         self.cylinder_clusterer = Clusterer("cluster/cylinder", min_center_detections=15)
         self.trader = Trader()
 
@@ -77,9 +77,11 @@ class CryptoMaster(object):
 
     def is_ready_for_cylinders(self):
         print("-----------IS READY FOR CYLINDERS?----------")
-        circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
+        if jobs_calculated:
+            return True
 
+        circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         num_jobs_with_data = self.circle_clusterer.get_num_jobs_with_data()
 
         if (self.goals_left and len(self.goals_left) == 0) or (circles_detected and num_jobs_with_data < NUM_CIRCLES_TO_DETECT):
@@ -89,7 +91,7 @@ class CryptoMaster(object):
             return False
 
 
-        if circles_detected and not jobs_calculated:
+        if circles_detected:
             print("Calculating jobs!!")
             gains = self.trader.get_job_gains(self.circle_clusterer.get_best_finished_jobs())
             self.cylinder_clusterer.sort_jobs(gains)
