@@ -84,7 +84,7 @@ class CryptoMaster(object):
         circles_detected = self.circle_clusterer.num_jobs_handled >= NUM_CIRCLES_TO_DETECT
         num_jobs_with_data = self.circle_clusterer.get_num_jobs_with_data()
 
-        if (self.goals_left and len(self.goals_left) == 0) or (
+        if (self.goals_left and len(self.goals_left) == 0 and num_jobs_with_data < NUM_CIRCLES_TO_DETECT) or (
                 circles_detected and num_jobs_with_data < NUM_CIRCLES_TO_DETECT):
             print("Not enough clusters with data!!!")
             self.circles_approached -= 1
