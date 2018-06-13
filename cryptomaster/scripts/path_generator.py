@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from geometry_msgs.msg import Point
 
-HARDCODED_POINTS = [Point(33, 92, 0), Point(13, 98, 0), Point(45, 83, 0)]
+HARDCODED_POINTS = [Point(33, 92, 0), Point(13, 95, 0), Point(45, 83, 0)]
 
 
 class GoalGenerator:
@@ -17,7 +17,7 @@ class GoalGenerator:
 
     def generate_points(self):
         eroded_image = self.erode_image(self.img)
-        goals = self.generate_goals(eroded_image, offset_x=7, offset_y=-2)
+        goals = self.generate_goals(eroded_image, offset_x=7, offset_y=9)
         return goals
 
     def erode_image(self, img):
@@ -29,9 +29,7 @@ class GoalGenerator:
         height, width = img.shape
         goals = []
         for y in range(self.goal_step, height, self.goal_step):
-            if y < 23:
-                continue
-            if y > 50 and y < 58:
+            if y > 40 and y < 55:
                 continue
 
             for x in range(self.goal_step, width, self.goal_step):
