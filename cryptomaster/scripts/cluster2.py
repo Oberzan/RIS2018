@@ -222,12 +222,13 @@ class Clusterer():
         marker.pose = pose
         if self.is_circle_cluster():
             marker.type = Marker.SPHERE
+            marker.id = 1000 + ix
         else:
             marker.type = Marker.CYLINDER
+            marker.id = ix
         marker.action = Marker.ADD
         marker.frame_locked = False
         marker.lifetime = rospy.Duration.from_sec(30)
-        marker.id = ix
         marker.scale = Vector3(0.1, 0.1, 0.1)
         marker.color = self.get_marker_color(data_point)
         return marker
