@@ -64,7 +64,7 @@ class HandManipulator(object):
         coin_joint_positions = {
             0: self.COIN_1_JOINT_POSITION + 0.34,
             1: self.COIN_1_JOINT_POSITION + 0.22,
-            2: self.COIN_1_JOINT_POSITION + 0.08
+            2: self.COIN_1_JOINT_POSITION + 0.07
         }
 
         joint_position_value = coin_joint_positions.get(index)
