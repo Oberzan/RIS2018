@@ -31,7 +31,7 @@ class CryptoMaster(object):
         rospy.init_node('cryptomaster')
         self.state = states.WAITING_FOR_MAP
         self.action_client = SimpleActionClient("move_base", MoveBaseAction)
-        self.action_client.wait_for_server()
+        # self.action_client.wait_for_server()
         self.goal_generator = GoalGenerator(rospy.get_param('~img'), erosion_factor=rospy.get_param('~erosion'),
                                             goal_step=rospy.get_param('~step'))
 
@@ -337,7 +337,14 @@ class CryptoMaster(object):
 def main():
     crypto_robot = CryptoMaster()
     crypto_robot.hand_manipulator.move_to_standby()
-    crypto_robot.run_robot()
+    ## crypto_robot.run_robot()
+
+    crypto_robot.hand_manipulator.grab_coin(0)
+    crypto_robot.hand_manipulator.drop_coin()
+    crypto_robot.hand_manipulator.grab_coin(1)
+    crypto_robot.hand_manipulator.drop_coin()
+    crypto_robot.hand_manipulator.grab_coin(2)
+    crypto_robot.hand_manipulator.drop_coin()
 
 
 if __name__ == '__main__':
