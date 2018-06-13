@@ -206,7 +206,7 @@ class Clusterer():
         self.publish_markers()
 
     def publish_markers(self):
-        candidates = [center for center in self.centers if center.n >= self.min_center_detections]
+        candidates = [center for center in self.centers if center.get_discrete_color() != None]
         by_n = sorted(candidates, key=lambda center: center.n, reverse=True)[:self.expected_clusters_count]
         markers = [self.point_2_marker(p, ix) for (ix, p) in enumerate(by_n)]
         self.markers_pub.publish(markers)
@@ -222,12 +222,13 @@ class Clusterer():
         marker.pose = pose
         if self.is_circle_cluster():
             marker.type = Marker.SPHERE
+            marker.id = 1000 + ix
         else:
             marker.type = Marker.CYLINDER
+            marker.id = ix
         marker.action = Marker.ADD
         marker.frame_locked = False
-        marker.lifetime = rospy.Duration.from_sec(30)
-        marker.id = ix
+        marker.lifetime = rospy.Duration.from_sec(0)
         marker.scale = Vector3(0.1, 0.1, 0.1)
         marker.color = self.get_marker_color(data_point)
         return marker
