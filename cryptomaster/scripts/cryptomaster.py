@@ -78,6 +78,10 @@ class CryptoMaster(object):
     def is_ready_for_cylinders(self):
         print("-----------IS READY FOR CYLINDERS?----------")
         jobs_calculated = self.cylinder_clusterer.jobs_calculated
+
+        if self.cylinder_clusterer.num_detected_cylinders() < NUM_CYLINDERS:
+            return False
+
         if jobs_calculated:
             return True
 

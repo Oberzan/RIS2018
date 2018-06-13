@@ -10,7 +10,7 @@ class Trader(object):
     def _calculate_gains_for_line(self, k, n):
         value_on_day_5 = k * 5 + n
         value_on_day_7 = k * 7 + n
-        gains = value_on_day_7 / value_on_day_5
+        gains = float(value_on_day_7) / float(value_on_day_5)
         if value_on_day_5 <= 0:
             return value_on_day_5, value_on_day_7, 0
         

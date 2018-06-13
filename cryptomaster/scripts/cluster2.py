@@ -50,6 +50,9 @@ class Clusterer():
     def get_num_jobs_with_data(self):
         return len([center for center in self.centers if center.data != None])
 
+    def num_detected_cylinders(self):
+        return len([center for center in self.centers if center.n >= 10])
+
     def create_next_job(self):
         without_data = self.get_jobs_with_no_data()
         most_ns = sorted(without_data, key=lambda center: center.n, reverse=True)
