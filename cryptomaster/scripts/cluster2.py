@@ -228,7 +228,7 @@ class Clusterer():
             marker.id = ix
         marker.action = Marker.ADD
         marker.frame_locked = False
-        marker.lifetime = rospy.Duration.from_sec(30)
+        marker.lifetime = rospy.Duration.from_sec(1000)
         marker.scale = Vector3(0.1, 0.1, 0.1)
         marker.color = self.get_marker_color(data_point)
         return marker
