@@ -206,7 +206,7 @@ class Clusterer():
         self.publish_markers()
 
     def publish_markers(self):
-        candidates = [center for center in self.centers if center.n >= self.min_center_detections and center.get_discrete_color() != None]
+        candidates = [center for center in self.centers if center.get_discrete_color() != None]
         by_n = sorted(candidates, key=lambda center: center.n, reverse=True)[:self.expected_clusters_count]
         markers = [self.point_2_marker(p, ix) for (ix, p) in enumerate(by_n)]
         self.markers_pub.publish(markers)
