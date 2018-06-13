@@ -42,6 +42,8 @@ class Trader(object):
             p1 = points[1]
             k = (p1[1] - p0[1]) / (p1[0] - p0[0])
             n = p1[1] - (p1[0] * k)
+        elif len(points) == 0:
+            return 0
         else:
             k = merged_data.get('k')
             p = points[0]
